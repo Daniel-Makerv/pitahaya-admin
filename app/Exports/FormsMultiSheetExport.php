@@ -37,7 +37,7 @@ class FormsMultiSheetExport implements WithMultipleSheets
     }
 
 
-
+    dd($types);
 
         foreach ($types as $type) {
 
