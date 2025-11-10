@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FormsExport;
+use App\Exports\FormsMultiSheetExport;
 
 
 Route::get('/', function () {
@@ -63,6 +64,11 @@ Route::get('/forms/export', function (Request $request) {
     $search = $request->input('search');
     $typeId = $request->input('type_form_id');
 
+
+    if($typeId == null || $typeId == ""){
+        return Excel::download(new FormsMultiSheetExport($search), 'formularios_completos.xlsx');
+
+    }
 
 
     $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
