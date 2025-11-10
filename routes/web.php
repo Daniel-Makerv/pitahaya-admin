@@ -24,7 +24,7 @@ Route::get('forms', function (Request $request) {
     if ($search) {
         $formsQuery->where(function ($q) use ($search) {
             $q->where('forms.name', 'like', "%{$search}%")
-                ->orWhere('forms->phone_contact', 'like', "%{$search}%") // 👈 busca dentro del JSON
+                ->orWhere('forms.form->phone_contact', 'like', "%{$search}%") // 👈 busca dentro del JSON
                 ->orWhere('type_forms.name', 'like', "%{$search}%"); // área de interés
         });
     }
