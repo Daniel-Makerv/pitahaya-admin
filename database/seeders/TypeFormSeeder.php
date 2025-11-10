@@ -3,11 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\TypeForm;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class
-TypeFormSeeder extends Seeder
+class TypeFormSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -18,28 +16,26 @@ TypeFormSeeder extends Seeder
             [
                 "name" => "Planta / Esqueje",
                 "str"  => "plantOrEsqueaje",
-"headers"  => [
-    'Fecha (DD/MM/AAAA)',
-    'Nombre',
-    'Teléfono / WhatsApp',
-    'Municipio / Estado',
-    'Tipo de terreno',
-    'Superficie (ha)',
-    'Disponibilidad de agua',
-    '¿Zona con heladas?',
-    '¿Tiene energía eléctrica?',
-    '¿Cuenta con mano de obra?',
-    'Nivel de decisión',
-    'Tiempo estimado para iniciar',
-    'Notas',
-],
-
-
+                "headers" => [
+                    'Fecha (DD/MM/AAAA)',
+                    'Nombre',
+                    'Teléfono / WhatsApp',
+                    'Municipio / Estado',
+                    'Tipo de terreno',
+                    'Superficie (ha)',
+                    'Disponibilidad de agua',
+                    '¿Zona con heladas?',
+                    '¿Tiene energía eléctrica?',
+                    '¿Cuenta con mano de obra?',
+                    'Nivel de decisión',
+                    'Tiempo estimado para iniciar',
+                    'Notas',
+                ],
             ],
             [
                 "name" => "Fruta (Nacional / Exportación)",
                 "str"  => "frut",
-               "headers" => [
+                "headers" => [
                     'Fecha (DD/MM/AAAA)',
                     'Nombre',
                     'Teléfono / WhatsApp',
@@ -57,12 +53,11 @@ TypeFormSeeder extends Seeder
                     'Tiempo para iniciar',
                     'Notas',
                 ],
-
             ],
             [
                 "name" => "Asesoría Técnica",
                 "str"  => "asesoryTec",
-                "headers"  => [
+                "headers" => [
                     'Fecha (DD/MM/AAAA)',
                     'Nombre',
                     'Teléfono / WhatsApp',
@@ -89,17 +84,17 @@ TypeFormSeeder extends Seeder
             [
                 "name" => "Procesado (Congelado / Deshidratado)",
                 "str"  => "process",
-                "headers"  => "",
+                "headers" => [],
             ],
             [
                 "name" => "Proveedores / Alianzas / Estancias",
                 "str"  => "providers",
-                "headers"  => "",
+                "headers" => [],
             ],
             [
                 "name" => "Solo Información",
                 "str"  => "info",
-                "headers"  => "",
+                "headers" => [],
             ],
         ];
 
@@ -107,9 +102,8 @@ TypeFormSeeder extends Seeder
             TypeForm::create([
                 'name' => $item['name'],
                 'str'  => $item['str'],
-                'headers'=> $item['headers'],
+                'headers' => json_encode($item['headers'], JSON_UNESCAPED_UNICODE),
             ]);
         }
-
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string("name");
             $table->string("str");
-            $table->json("headers");
+            $table->json('headers')->nullable();
             $table->timestamps();
         });
     }
