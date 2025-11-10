@@ -16,16 +16,31 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+
         User::create([
             'name' => 'Pitamex',
             'email' => 'Pitamex@pitahayaorg.com',
-            'password' => Hash::make('eu437C*'),
+            'password' => Hash::make('eu437C*
+            '),
         ]);
 
         User::create([
             'name' => 'gerencia',
             'email' => 'gerencia@pitajayaorg',
             'password' => Hash::make("0K4'um=8&"),
+        ]);
+
+
+        User::create([
+            'name' => 'gerencia',
+            'email' => 'ema.juve.17@gmail.com',
+            'password' => Hash::make("C$56g6$"),
+        ]);
+
+        User::create([
+            'name' => 'gerencia',
+            'email' => 'Omegajmayala@gmail.com',
+            'password' => Hash::make("J4.c36?"),
         ]);
 
         $this->call([

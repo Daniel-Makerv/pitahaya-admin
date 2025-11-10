@@ -21,13 +21,7 @@ class FormsExport implements FromCollection, WithHeadings
     public function collection()
     {
         return $this->forms->map(function ($form) {
-            $data = json_decode($form->form, true);
-
-            return [
-                'Nombre' => $form->name,
-                'Contacto' => $data['phone_contact'] ?? '',
-                'Tipo' => $form->type,
-            ];
+            return json_decode($form->form, true);
         });
     }
 
@@ -35,6 +29,7 @@ class FormsExport implements FromCollection, WithHeadings
     {
 
         $headers = TypeForm::find($this->typeId);
-        return  json_decode($headers->headers, true);
+
+        return json_decode($headers->headers, true);
     }
 }

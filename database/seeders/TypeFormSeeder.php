@@ -28,6 +28,7 @@ class TypeFormSeeder extends Seeder
                     '¿Tiene energía eléctrica?',
                     '¿Cuenta con mano de obra?',
                     'Nivel de decisión',
+                    '¿en qué cultivos tienes experiencia?',
                     'Tiempo estimado para iniciar',
                     'Notas',
                 ],
@@ -84,17 +85,53 @@ class TypeFormSeeder extends Seeder
             [
                 "name" => "Procesado (Congelado / Deshidratado)",
                 "str"  => "process",
-                "headers" => [],
+                "headers" =>[
+                    'Fecha',
+                    'Nombre',
+                    'Teléfono',
+                    'Ciudad/Estado',
+                    'Rol',
+                    'Uso',
+                    'Planta',
+                    'Proceso',
+                    'Volumen',
+                    'Frecuencia',
+                    'Estado fruta',
+                    'Variedad',
+                    'Grado industria',
+                    'Lugar entrega',
+                    'Flete',
+                    'Pago',
+                    'Crédito',
+                    'Inicio',
+                    'Notas',
+                ]
+
             ],
             [
                 "name" => "Proveedores / Alianzas / Estancias",
                 "str"  => "providers",
-                "headers" => [],
+                "headers" => [
+                    'Fecha',
+                    'Nombre',
+                    'Teléfono',
+                    'Ciudad/Estado',
+                    'Perfil',
+                    'Interés',
+                    'Contacto',
+                    'Notas',
+                ]
+
             ],
             [
                 "name" => "Solo Información",
                 "str"  => "info",
-                "headers" => [],
+                "headers" => [
+                    'Fecha',
+                    'Nombre',
+                    'Notas',
+                ]
+
             ],
         ];
 

@@ -10,11 +10,11 @@ use App\Exports\FormsExport;
 
 
 Route::get('/', function () {
-    return redirect('/forms');
+    return redirect('/dashboard');
 })->name('home');
 
 Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('forms', function (Request $request) {
@@ -62,6 +62,8 @@ Route::get('forms', function (Request $request) {
 Route::get('/forms/export', function (Request $request) {
     $search = $request->input('search');
     $typeId = $request->input('type_form_id');
+
+
 
     $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
         ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
