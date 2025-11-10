@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        TypeFormSeeder::class;
+        $this->call([
+            TypeFormSeeder::class,
+        ]);
     }
 }
