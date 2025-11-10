@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { forms } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+import AppLayout from "@/layouts/AppLayout.vue";
+import { forms as formsRoute } from "@/routes";
+import type { BreadcrumbItem } from "@/types";
+import { Head, Link, router } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
 
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Formularios', href: '/forms' },
-]
+const breadcrumbs: BreadcrumbItem[] = [{ title: "Formularios", href: formsRoute().url }];
 
 const props = defineProps<{
   forms: {
-    data: any[]
-    links: any[]
-    current_page: number
-    last_page: number
-  }
-  counts: number
-}>()
+    data: any[];
+    links: any[];
+    current_page: number;
+    last_page: number;
+  };
+  counts: number;
+  filters?: {
+    search?: string;
+  };
+}>();
+
+// 👇 estado local del buscador
+const search = ref(props.filters?.search ?? "");
+
+// 👇 cada vez que cambia el input, mandamos la búsqueda
+watch(search, (value) => {
+  router.get(
+    formsRoute().url,
+    { search: value },
+    {
+      preserveState: true,
+      replace: true,
+    }
+  );
+});
 </script>
 
 <template>
@@ -118,8 +134,9 @@ const props = defineProps<{
             <input
               type="text"
               id="table-search-users"
+              v-model="search"
               class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Search for users"
+              placeholder="buscar por nombre, área de interés"
             />
           </div>
         </div>
@@ -140,10 +157,9 @@ const props = defineProps<{
                   <label for="checkbox-all-search" class="sr-only">checkbox</label>
                 </div>
               </th>
-              <th scope="col" class="px-6 py-3">Name</th>
-              <th scope="col" class="px-6 py-3">Position</th>
-              <th scope="col" class="px-6 py-3">Status</th>
-              <th scope="col" class="px-6 py-3">Action</th>
+              <th scope="col" class="px-6 py-3">Nombre</th>
+              <th scope="col" class="px-6 py-3">Contacto</th>
+              <th scope="col" class="px-6 py-3">Area interes</th>
             </tr>
           </thead>
           <tbody>
@@ -168,8 +184,8 @@ const props = defineProps<{
                 {{ form.name }}
               </th>
 
+              <td class="px-6 py-4">{{ form.phone_contact }}</td>
               <td class="px-6 py-4">{{ form.type }}</td>
-              <td class="px-6 py-4">{{ form.str }}</td>
 
               <td class="px-6 py-4">
                 <Link
