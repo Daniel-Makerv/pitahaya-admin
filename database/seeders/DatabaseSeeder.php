@@ -21,5 +21,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@test.com',
             'password' => Hash::make('password'),
         ]);
+
+        TypeFormSeeder::class;
     }
 }
