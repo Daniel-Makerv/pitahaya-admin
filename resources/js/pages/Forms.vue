@@ -22,9 +22,11 @@ const props = defineProps<{
 
 // 👇 estado local del buscador
 const search = ref(props.filters?.search ?? "");
-const typeFilter = ref(props.filters?.type_form_id ?? "");
+const typeFilter = ref(props.filters?.type_form_id ?? null);
 
 const filterByType = (typeId: number | null) => {
+  typeFilter.value = typeId; // ✅ cambia el estado local inmediatamente
+
   router.get(
     formsRoute().url,
     {
@@ -37,7 +39,6 @@ const filterByType = (typeId: number | null) => {
     }
   );
 };
-
 // 👇 cada vez que cambia el input, mandamos la búsqueda
 watch(search, (value) => {
   router.get(
@@ -62,9 +63,9 @@ watch(search, (value) => {
         >
           <div class="flex flex-wrap gap-2 mb-4">
             <button
-              class="px-3 py-1.5 text-sm rounded-lg border"
+              class="px-3 py-1.5 text-sm rounded-lg border transition"
               :class="[
-                !props.filters?.type_form_id
+                !typeFilter
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
               ]"
@@ -76,9 +77,9 @@ watch(search, (value) => {
             <button
               v-for="count in props.counts"
               :key="count.id"
-              class="px-3 py-1.5 text-sm rounded-lg border"
+              class="px-3 py-1.5 text-sm rounded-lg border transition"
               :class="[
-                props.filters?.type_form_id == count.id
+                typeFilter == count.id
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
               ]"
