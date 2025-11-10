@@ -22,6 +22,21 @@ const props = defineProps<{
 
 // 👇 estado local del buscador
 const search = ref(props.filters?.search ?? "");
+const typeFilter = ref(props.filters?.type_form_id ?? "");
+
+const filterByType = (typeId: number | null) => {
+  router.get(
+    formsRoute().url,
+    {
+      search: search.value,
+      type_form_id: typeId,
+    },
+    {
+      preserveState: true,
+      replace: true,
+    }
+  );
+};
 
 // 👇 cada vez que cambia el input, mandamos la búsqueda
 watch(search, (value) => {
@@ -45,6 +60,34 @@ watch(search, (value) => {
         <div
           class="flex items-center justify-between flex-column flex-wrap md:flex-row space-y-4 md:space-y-0 pb-4 bg-white dark:bg-gray-900"
         >
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button
+              class="px-3 py-1.5 text-sm rounded-lg border"
+              :class="[
+                !props.filters?.type_form_id
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              ]"
+              @click="filterByType(null)"
+            >
+              Todos ({{ props.counts.reduce((sum, c) => sum + c.total, 0) }})
+            </button>
+
+            <button
+              v-for="count in props.counts"
+              :key="count.id"
+              class="px-3 py-1.5 text-sm rounded-lg border"
+              :class="[
+                props.filters?.type_form_id == count.id
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              ]"
+              @click="filterByType(count.id)"
+            >
+              {{ count.name }} ({{ count.total }})
+            </button>
+          </div>
+
           <div>
             <button
               id="dropdownActionButton"
@@ -199,7 +242,7 @@ watch(search, (value) => {
           </tbody>
         </table>
 
-        <div class="flex justify-center mt-4 space-x-2">
+        <div class="flex justify-center mt-4 space-x-2 mb-4">
           <Link
             v-for="(link, index) in props.forms.links"
             :key="index"

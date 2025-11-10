@@ -16,10 +16,16 @@ Route::get('dashboard', function () {
 
 Route::get('forms', function (Request $request) {
     $search = $request->input('search');
+    $typeId = $request->input('type_form_id');
 
     $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
         ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
 
+
+        // 🧭 Filtro por tipo de formulario
+    if ($typeId) {
+        $formsQuery->where('forms.type_form_id', $typeId);
+    }
     // 👇 Filtro por búsqueda
     if ($search) {
         $formsQuery->where(function ($q) use ($search) {
@@ -29,12 +35,13 @@ Route::get('forms', function (Request $request) {
         });
     }
 
-    $forms = $formsQuery->paginate(10)->withQueryString(); // <- mantiene search en los links
+    $forms = $formsQuery->paginate(15)->withQueryString(); // <- mantiene search en los links
 
     $counts = TypeForm::get()->map(function ($typeForm) {
         $total = Form::whereTypeFormId($typeForm->id)->count();
 
         return [
+            'id' => $typeForm->id,
             'name' => $typeForm->name,
             'total' => $total,
         ];
