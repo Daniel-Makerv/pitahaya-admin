@@ -38,4 +38,10 @@ class FormsExport implements FromCollection, WithHeadings
         }
 
     }
+
+    public function title(): string
+    {
+        $title = TypeForm::find($this->typeId);
+        return $title->name; // Nombre de la hoja
+    }
 }
