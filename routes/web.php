@@ -5,6 +5,9 @@ use App\Models\TypeForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\FormsExport;
+
 
 Route::get('/', function () {
     return redirect('/forms');
@@ -21,8 +24,7 @@ Route::get('forms', function (Request $request) {
     $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
         ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
 
-
-        // 🧭 Filtro por tipo de formulario
+    // 🧭 Filtro por tipo de formulario
     if ($typeId) {
         $formsQuery->where('forms.type_form_id', $typeId);
     }
@@ -56,5 +58,30 @@ Route::get('forms', function (Request $request) {
         ],
     ]);
 })->middleware(['auth', 'verified'])->name('forms');
+
+Route::get('/forms/export', function (Request $request) {
+    $search = $request->input('search');
+    $typeId = $request->input('type_form_id');
+
+    $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
+        ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
+
+    if ($search) {
+        $formsQuery->where(function ($q) use ($search) {
+            $q->where('forms.name', 'like', "%{$search}%")
+                ->orWhere('type_forms.name', 'like', "%{$search}%")
+                ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
+        });
+    }
+
+    if ($typeId) {
+        $formsQuery->where('forms.type_form_id', $typeId);
+    }
+
+    $forms = $formsQuery->get();
+
+    // 🔹 Si usas maatwebsite/excel
+    return Excel::download(new FormsExport($forms, $typeId), 'formularios.xlsx');
+})->name('forms.export');
 
 require __DIR__.'/settings.php';

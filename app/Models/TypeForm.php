@@ -9,6 +9,7 @@ class TypeForm extends Model
     //
     protected $fillable = [
         "name",
-        "str"
+        "str",
+        "headers"
     ];
 }

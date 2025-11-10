@@ -6,6 +6,7 @@ import { Head, Link, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: "Formularios", href: formsRoute().url }];
+const showDropdown = ref(false);
 
 const props = defineProps<{
   forms: {
@@ -23,6 +24,17 @@ const props = defineProps<{
 // 👇 estado local del buscador
 const search = ref(props.filters?.search ?? "");
 const typeFilter = ref(props.filters?.type_form_id ?? null);
+
+const exportExcel = (typeId: number | null) => {
+  const params = new URLSearchParams({
+    search: search.value || "",
+  });
+
+  if (typeId) params.append("type_form_id", typeId.toString());
+
+  // 👇 Abre la descarga directamente
+  window.open(`/forms/export?${params.toString()}`, "_blank");
+};
 
 const filterByType = (typeId: number | null) => {
   typeFilter.value = typeId; // ✅ cambia el estado local inmediatamente
@@ -89,15 +101,14 @@ watch(search, (value) => {
             </button>
           </div>
 
-          <div>
+          <div class="relative">
             <button
               id="dropdownActionButton"
-              data-dropdown-toggle="dropdownAction"
+              @click="showDropdown = !showDropdown"
               class="inline-flex items-center text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
               type="button"
             >
-              <span class="sr-only">Action button</span>
-              Action
+              Exportar Excel
               <svg
                 class="w-2.5 h-2.5 ms-2.5"
                 aria-hidden="true"
@@ -114,46 +125,32 @@ watch(search, (value) => {
                 />
               </svg>
             </button>
-            <!-- Dropdown menu -->
+
             <div
-              id="dropdownAction"
-              class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600"
+              v-if="showDropdown"
+              class="absolute right-0 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-56 dark:bg-gray-700 dark:divide-gray-600 z-50"
             >
-              <ul
-                class="py-1 text-sm text-gray-700 dark:text-gray-200"
-                aria-labelledby="dropdownActionButton"
-              >
+              <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
                 <li>
-                  <a
-                    href="#"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                    >Reward</a
+                  <button
+                    class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                    @click="exportExcel(null)"
                   >
+                    Todos ({{ props.counts.reduce((sum, c) => sum + c.total, 0) }})
+                  </button>
                 </li>
-                <li>
-                  <a
-                    href="#"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                    >Promote</a
+                <li v-for="count in props.counts" :key="count.id">
+                  <button
+                    class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                    @click="exportExcel(count.id)"
                   >
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                    >Activate account</a
-                  >
+                    {{ count.name }} ({{ count.total }})
+                  </button>
                 </li>
               </ul>
-              <div class="py-1">
-                <a
-                  href="#"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                  >Delete User</a
-                >
-              </div>
             </div>
           </div>
+
           <label for="table-search" class="sr-only">Search</label>
           <div class="relative">
             <div
@@ -204,6 +201,7 @@ watch(search, (value) => {
               <th scope="col" class="px-6 py-3">Nombre</th>
               <th scope="col" class="px-6 py-3">Contacto</th>
               <th scope="col" class="px-6 py-3">Area interes</th>
+              <th scope="col" class="px-6 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
