@@ -35,7 +35,7 @@ Route::get('forms', function (Request $request) {
         });
     }
 
-    $forms = $formsQuery->paginate(15)->withQueryString(); // <- mantiene search en los links
+    $forms = $formsQuery->paginate(12)->withQueryString(); // <- mantiene search en los links
 
     $counts = TypeForm::get()->map(function ($typeForm) {
         $total = Form::whereTypeFormId($typeForm->id)->count();
