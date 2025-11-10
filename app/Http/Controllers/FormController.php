@@ -33,11 +33,12 @@ class FormController extends Controller
     {
         //
         try {
-            $data = $request->all();
+            $token = $request->bearerToken();
 
-            $record = $data['record'] ?? null;
-            $uuidBase = $data['uuidBase'] ?? null;
-            $token = $data['token'] ?? null;
+        // ✅ Leer el UUID y los datos del cuerpo JSON
+        $uuid = $request->input('uuid');
+        $data = $request->input('data');
+
             if ($token != 'goro4vmm.gd3') {
                 Log::debug('error token');
 
@@ -46,9 +47,9 @@ class FormController extends Controller
 
             // code...
             Form::create([
-                'name' => $record['name_complete'],
-                'form' => $record,
-                'type_form_id' => TypeForm::whereStr($uuidBase)->first()->id,
+                'name' => $data['name_complete'],
+                'form' => $data,
+                'type_form_id' => TypeForm::whereStr($uuid)->first()->id,
             ]);
         } catch (\Exception $err) {
             Log::debug('error: '.$err->getMessage());
