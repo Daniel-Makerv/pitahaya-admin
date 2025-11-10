@@ -43,7 +43,7 @@ class FormsMultiSheetExport implements WithMultipleSheets
 $formsQuery->where('forms.type_form_id', $type->id);
 $forms = $formsQuery->get();
 
-            $sheets[] = new FormsExport($forms, $type);
+            $sheets[] = new FormsExport($forms, $type->id);
         }
 
         return $sheets;
