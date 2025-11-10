@@ -6,6 +6,7 @@ use App\Models\Form;
 use App\Models\TypeForm;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
@@ -38,6 +39,8 @@ class FormController extends Controller
             $uuidBase = $data['uuidBase'] ?? null;
             $token = $data['token'] ?? null;
             if ($token != 'goro4vmm.gd3') {
+                Log::debug('error token');
+
                 return throw new Exception('Error token incorrect', 500);
             }
 
@@ -48,8 +51,11 @@ class FormController extends Controller
                 'type_form_id' => TypeForm::whereStr($uuidBase)->first()->id,
             ]);
         } catch (\Exception $err) {
+            Log::debug('error: '.$err->getMessage());
+
             return throw new Exception('Error Processing Request: . '.$err->getMessage(), 500);
         }
+        Log::debug('regiistro guardado con exito');
 
         return response()->json([
             'sucess' => true,
