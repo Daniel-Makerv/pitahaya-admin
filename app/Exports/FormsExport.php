@@ -27,9 +27,15 @@ class FormsExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
+        try {
+            //code...
+            $headers = TypeForm::find($this->typeId);
+            return json_decode($headers->headers, true);
 
-        $headers = TypeForm::find($this->typeId);
+        } catch (\Exception $err) {
+            //throw $th;
+            dd($err->getMessage(). $this->typeId);
+        }
 
-        return json_decode($headers->headers, true);
     }
 }
