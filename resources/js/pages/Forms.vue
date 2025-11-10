@@ -227,7 +227,9 @@ watch(search, (value) => {
                 {{ form.name }}
               </th>
 
-              <td class="px-6 py-4">{{ form.phone_contact }}</td>
+              <td class="px-6 py-4">
+                {{ JSON.parse(form.form)?.phone_contact }}
+              </td>
               <td class="px-6 py-4">{{ form.type }}</td>
 
               <td class="px-6 py-4">
