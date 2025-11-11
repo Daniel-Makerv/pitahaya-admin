@@ -23,29 +23,26 @@ class FormsMultiSheetExport implements WithMultipleSheets
 
         $search = $this->search;
 
-        dd(Form::where('type_form_id', 2)->get());
-
-        $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
-            ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
-
-        if ($search) {
-            $formsQuery->where(function ($q) use ($search) {
-                $q->where('forms.name', 'like', "%{$search}%")
-                    ->orWhere('type_forms.name', 'like', "%{$search}%")
-                    ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
-            });
-        }
-
         foreach ($types as $type) {
+            $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
+                ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str')
+                ->where('forms.type_form_id', $type->id);
 
-            $formsQuery->where('forms.type_form_id', $type->id);
-            $forms = $formsQuery->get();
-            if ($type->id == 2) {
-                dd($forms);
+            if ($search) {
+                $formsQuery->where(function ($q) use ($search) {
+                    $q->where('forms.name', 'like', "%{$search}%")
+                        ->orWhere('type_forms.name', 'like', "%{$search}%")
+                        ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
+                });
             }
+
+            $forms = $formsQuery->get();
+
             $sheets[] = new FormsExport($forms, $type->id);
+
         }
 
         return $sheets;
+
     }
 }
