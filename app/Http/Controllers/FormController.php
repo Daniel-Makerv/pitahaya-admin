@@ -43,7 +43,9 @@ class FormController extends Controller
                 return throw new Exception('Error token incorrect', 500);
             }
 
-            $validateUserRegister = Form::where('name', $data['name_complete'])->where('phone_contact', $data['name_complete'])->first();
+            $validateUserRegister = Form::where('form->name_complete', $data['name_complete'])
+                ->where('form->phone_contact', $data['phone_contact'])
+                ->first();
             if ($validateUserRegister) {
                 return response()->json([
                     'sucess' => true,
