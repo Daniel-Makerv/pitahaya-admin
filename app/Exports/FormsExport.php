@@ -28,7 +28,6 @@ class FormsExport implements FromCollection, WithHeadings, WithTitle
 
             switch ($this->typeId) {
                 case 1:
-                    dd($data);
                     $dataBody = [
                         'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
                         'nombre' => $data['name_complete'],
