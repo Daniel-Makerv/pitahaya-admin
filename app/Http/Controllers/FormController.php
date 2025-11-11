@@ -45,7 +45,8 @@ class FormController extends Controller
                 return throw new Exception('Error token incorrect', 500);
             }
 
-            if (Form::whereUuid($data['id'])->first()) {
+            $validateUserRegister = Form::where('name', $data['name_complete'])->where('phone_contact', $data['name_complete'])->first();
+            if ($validateUserRegister) {
                 return response()->json([
                     'sucess' => true,
                     'message' => 'guardado correctamente',
@@ -55,7 +56,7 @@ class FormController extends Controller
             // code...
             Form::create([
                 'name' => $data['name_complete'],
-                'uuid' => $data['id'],
+                // 'uuid' => $data['id'],
                 'form' => json_encode($data),
                 'type_form_id' => TypeForm::whereStr($uuid)->first()->id,
             ]);
