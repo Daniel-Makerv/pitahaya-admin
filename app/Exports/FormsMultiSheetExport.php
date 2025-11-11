@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exports;
 
 use App\Models\Form;
@@ -7,8 +8,6 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class FormsMultiSheetExport implements WithMultipleSheets
 {
-
-
     public $search;
 
     public function __construct($search)
@@ -20,28 +19,27 @@ class FormsMultiSheetExport implements WithMultipleSheets
     {
         $sheets = [];
 
-        $types  = TypeForm::get();
+        $types = TypeForm::get();
 
-        $search= $this->search;
+        dd($types);
 
+        $search = $this->search;
 
         $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
-        ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
+            ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
 
-    if ($search) {
-        $formsQuery->where(function ($q) use ($search) {
-            $q->where('forms.name', 'like', "%{$search}%")
-                ->orWhere('type_forms.name', 'like', "%{$search}%")
-                ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
-        });
-    }
-
-
+        if ($search) {
+            $formsQuery->where(function ($q) use ($search) {
+                $q->where('forms.name', 'like', "%{$search}%")
+                    ->orWhere('type_forms.name', 'like', "%{$search}%")
+                    ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
+            });
+        }
 
         foreach ($types as $type) {
 
-$formsQuery->where('forms.type_form_id', $type->id);
-$forms = $formsQuery->get();
+            $formsQuery->where('forms.type_form_id', $type->id);
+            $forms = $formsQuery->get();
 
             $sheets[] = new FormsExport($forms, $type->id);
         }
@@ -49,4 +47,3 @@ $forms = $formsQuery->get();
         return $sheets;
     }
 }
-
