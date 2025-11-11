@@ -23,7 +23,7 @@ class FormsMultiSheetExport implements WithMultipleSheets
 
         $search = $this->search;
 
-        dd(Form::where('type_form_id', 2))->get();
+        dd(Form::where('type_form_id', 2)->get());
 
         $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
             ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
