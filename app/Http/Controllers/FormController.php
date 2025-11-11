@@ -40,11 +40,7 @@ class FormController extends Controller
             $data = $request->input('data');
 
             if ($token != 'goro4vmm.gd3') {
-                return throw new Exception('', 500);
-                return response()->json([
-                    'sucess' => false,
-                    'message' => 'Error token incorrect: '.$err->getMessage(),
-                ], 500);
+                return throw new Exception('Error token incorrect', 500);
             }
 
             $validateUserRegister = Form::where('name', $data['name_complete'])->where('phone_contact', $data['name_complete'])->first();
@@ -62,7 +58,7 @@ class FormController extends Controller
                 'form' => json_encode($data),
                 'type_form_id' => TypeForm::whereStr($uuid)->first()->id,
             ]);
-        } catch (\Exception $err) {
+        } catch (Exception $err) {
             Log::debug('error: '.$err->getMessage());
 
             return response()->json([
