@@ -40,9 +40,11 @@ class FormController extends Controller
             $data = $request->input('data');
 
             if ($token != 'goro4vmm.gd3') {
-                Log::debug('error token');
-
-                return throw new Exception('Error token incorrect', 500);
+                return throw new Exception('', 500);
+                return response()->json([
+                    'sucess' => false,
+                    'message' => 'Error token incorrect: '.$err->getMessage(),
+                ], 500);
             }
 
             $validateUserRegister = Form::where('name', $data['name_complete'])->where('phone_contact', $data['name_complete'])->first();
@@ -63,7 +65,10 @@ class FormController extends Controller
         } catch (\Exception $err) {
             Log::debug('error: '.$err->getMessage());
 
-            return throw new Exception('Error Processing Request: . '.$err->getMessage(), 500);
+            return response()->json([
+                'sucess' => false,
+                'message' => 'error: '.$err->getMessage(),
+            ], 500);
         }
         Log::debug('regiistro guardado con exito');
 
