@@ -22,8 +22,6 @@ class FormsExport implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
-        dd($this->forms);
-
         return $this->forms->map(function ($form) {
             $dataBody = [];
             $data = json_decode($form->form, true);
