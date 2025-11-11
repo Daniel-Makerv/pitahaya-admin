@@ -9,6 +9,7 @@ class Form extends Model
 protected $fillable = [
     "name",
     "form",
+    "uuid",
     "type_form_id"
 ];
 }

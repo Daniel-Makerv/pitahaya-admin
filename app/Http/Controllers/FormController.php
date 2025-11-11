@@ -45,9 +45,17 @@ class FormController extends Controller
                 return throw new Exception('Error token incorrect', 500);
             }
 
+            if (Form::whereUuid($data['uuid'])->first()) {
+                return response()->json([
+                    'sucess' => true,
+                    'message' => 'guardado correctamente',
+                ], 200);
+            }
+
             // code...
             Form::create([
                 'name' => $data['name_complete'],
+                'uuid' => $data['uuid'],
                 'form' => json_encode($data),
                 'type_form_id' => TypeForm::whereStr($uuid)->first()->id,
             ]);
