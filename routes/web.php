@@ -11,11 +11,11 @@ use App\Exports\FormsMultiSheetExport;
 
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return redirect('dashboard');
 })->name('home');
 
 Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
+    return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('forms', function (Request $request) {
