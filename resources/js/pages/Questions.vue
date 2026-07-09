@@ -140,7 +140,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import ModalPreguntaBase from './ModalPreguntaBase.vue';
+//import ModalPreguntaBase from './ModalPreguntaBase.vue';
 
 // Si usas Vue Router descomenta la siguiente línea:
 // import { useRouter } from 'vue-router';
