@@ -8,7 +8,7 @@ use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FormsExport;
 use App\Exports\FormsMultiSheetExport;
-
+use App\Http\Controllers\Questions\QuestionController;
 
 Route::get('/', function () {
     return redirect('dashboard');
@@ -65,9 +65,8 @@ Route::get('/forms/export', function (Request $request) {
     $typeId = $request->input('type_form_id');
 
 
-    if($typeId == null || $typeId == ""){
+    if ($typeId == null || $typeId == "") {
         return Excel::download(new FormsMultiSheetExport($search), 'formularios_completos.xlsx');
-
     }
 
 
@@ -92,4 +91,14 @@ Route::get('/forms/export', function (Request $request) {
     return Excel::download(new FormsExport($forms, $typeId), 'formularios.xlsx');
 })->name('forms.export');
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
+
+
+
+// Route::resource('questions', QuestionController::class);
+
+
+// Route::get('questions', [QuestionController::class, 'index']);
+// Route::get('questions', [QuestionController::class, 'index']);
+
+Route::resource('questions', QuestionController::class);
