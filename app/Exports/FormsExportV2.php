@@ -22,115 +22,101 @@ class FormsExportV2 implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
-        return $this->forms;
+        // return $this->forms;
         return $this->forms->map(function ($form) {
             $dataBody = [];
             $data = json_decode($form->form, true);
 
-            // switch ($this->typeId) {
-            //     case 7:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['municipality_state'],
-            //             'Tipo de terreno' => $data['land_type'],
-            //             'Superficie (ha)' => $data['available_surface_ha'],
-            //             'Disponibilidad de agua' => $data['water_availability'],
-            //             '¿Zona con heladas?' => $data['frost_zone'],
-            //             '¿Tiene energía eléctrica?' => $data['has_electricity'],
-            //             '¿Cuenta con mano de obra?' => $data['has_labor'],
-            //             'Nivel de decisión' => $data['decision_level'],
-            //             '¿en qué cultivos tienes experiencia?' => $data['why_experience_cultive'],
-            //             'Tiempo estimado para iniciar' => $data['estimated_start_time'],
-            //         ];
-            //         break;
-            //     case 2:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['city_state'],
-            //             'Tipo de fruta' => $data['fruit_type'],
-            //             'Volumen' => $data['volume'],
-            //             'Frecuencia' => $data['frequency'],
-            //             'Presentación' => $data['presentation'],
-            //             'Calidad' => $data['quality'],
-            //             'Lugar de entrega' => $data['delivery_place'],
-            //             'Flete' => $data['freight'],
-            //             'Transporte' => $data['transport'],
-            //             'Pago' => $data['payment'],
-            //             'Crédito' => $data['credit_days'],
-            //             'Inicio' => $data['start_time'],
-            //         ];
-            //         break;
-            //     case 3:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['municipality_state'],
-            //             'Años cultivo' => $data['years_of_cultivation'],
-            //             'Superficie(ha)' => $data['surface_ha'],
-            //             'Plantas' => $data['plants'],
-            //             'Variedades' => $data['varieties'],
-            //             'Propósito' => $data['purpose'],
-            //             'Tutor' => $data['tutor_type'],
-            //             'Riego' => $data['irrigation_type'],
-            //             'Fertilización' => $data['fertilization'],
-            //             'Problemas' => $data['problems'],
-            //             'Estado cultivo' => $data['crop_status'],
-            //             'Producción' => $data['production_status'],
-            //             'Objetivo' => $data['objective'],
-            //             'Tipo asesoría' => $data['advisory_type'],
-            //             'Involucramiento' => $data['involvement'],
-            //             'Compromiso' => $data['commitment'],
-            //             'Visita' => $data['visit'],
-            //         ];
-            //         break;
-            //     case 4:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['city_state'],
-            //             'Rol' => $data['role'],
-            //             'Uso' => $data['use'],
-            //             'Planta' => $data['has_plant'],
-            //             'Proceso' => $data['process_type'],
-            //             'Volumen' => $data['volume'],
-            //             'Frecuencia' => $data['frequency'],
-            //             'Estado fruta' => $data['fruit_state'],
-            //             'Variedad' => $data['variety'],
-            //             'Grado industria' => $data['industry_grade'],
-            //             'Lugar entrega' => $data['delivery_place'],
-            //             'Flete' => $data['freight'],
-            //             'Pago' => $data['payment'],
-            //             'Crédito' => $data['credit_days'],
-            //             'Inicio' => $data['start_time'],
-            //         ];
-            //         break;
-            //     case 5:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['municipality_state'],
-            //             'Perfil' => $data['profile'],
-            //             'Interés' => $data['interest'],
-            //             'Contacto' => $data['contact_method'],
-            //         ];
-            //         break;
-            //     case 6:
-            //         $dataBody = [
-            //             'fecha' => Carbon::parse($data['fecha'])->format('d/m/Y'),
-            //             'nombre' => $data['name_complete'],
-            //             'Teléfono / WhatsApp' => $data['phone_contact'],
-            //             'Municipio / Estado' => $data['municipality_state'],
-            //             'Notas' => $data['notes'],
-            //         ];
-            //         break;
-            // }
+            switch ($this->typeId) {
+                case 7:
+                    $dataBody = [
+                        'Nombre completo' => $data['name_complete'],
+                        'Empresa/Rancho' => $data['bussiness_ranch'],
+                        'Cargo/Puesto' => $data['cargo_puesto'],
+                        'Área principal' => $data['q1'],
+                        '2.-Teléfono / WhatsApp' => $data['phone_contact'],
+                        '2.-Correo' => $data['email'],
+                        '2.-País' => $data['country'],
+                        '3.- Estado/Ciudad' => $data['municipality_state'],
+                        'Producción anual' => $data['produccion_anual'],
+                        'Semanas de producción' => $data['semanas_de_produccion'],
+                        'Variedades principales' => $data['variedades_principales'],
+                        'Tipo de clima' => $data['tipo_de_clima'],
+                        'Grados Brix' => $data['grados_brix'],
+                        '¿Cuenta con certificaciones?' => $data['cuenta_con_certificaciones'],
+                        '¿Le interesa producción limpia/libre de pesticidas?' => $data['le_interesa_produccion_limpia_libre_de_pesticidas'],
+                        '¿Cuenta con cadena de frío?' => $data['cuenta_con_cadena_de_frio'],
+                        '¿Busca relación de largo plazo?' => $data['busca_relacion_de_largo_plazo'],
+                    ];
+                    break;
+                case 8:
+                    $dataBody = [
+                        'Nombre completo' => $data['name_complete'],
+                        'Empresa/Rancho' => $data['bussiness_ranch'],
+                        'Cargo/Puesto' => $data['cargo_puesto'],
+                        'Área principal' => $data['q1'],
+                        '2.-Teléfono / WhatsApp' => $data['phone_contact'],
+                        '2.-Correo' => $data['email'],
+                        '2.-País' => $data['country'],
+                        '3.- Estado/Ciudad' => $data['municipality_state'],
+                        'Área principal' => $data['area_principal'],
+                        'Canal principal' => $data['canal_principal'],
+                        'Volumen requerido' => $data['volumen_requerido'],
+                        'Variedades de interés' => $data['variedades_de_interes'],
+                        'Presentación deseada' => $data['presentacion_deseada'],
+                        '¿Qué certificaciones requiere?' => $data['que_certificaciones_requiere'],
+                        '¿Qué documentos solicita?' => $data['que_documentos_solicita'],
+                        'Método de pago' => $data['metodo_de_pago'],
+                        'Tiempo de pago' => $data['tiempo_de_pago'],
+                        '¿Busca proveedor permanente?' => $data['busca_proveedor_permanente'],
+                    ];
+                    break;
+                case 9:
+                    $dataBody = [
+                        'Nombre completo' => $data['name_complete'],
+                        'Empresa/Rancho' => $data['bussiness_ranch'],
+                        'Cargo/Puesto' => $data['cargo_puesto'],
+                        'Área principal' => $data['q1'],
+                        '2.-Teléfono / WhatsApp' => $data['phone_contact'],
+                        '2.-Correo' => $data['email'],
+                        '2.-País' => $data['country'],
+                        '3.- Estado/Ciudad' => $data['municipality_state'],
+                        '¿Qué necesita?' => $data['que_necesita'],
+                        '¿Cuenta con huerta establecida?' => $data['cuenta_con_huerta_establecida'],
+                        'Superficie' => $data['superficie'],
+                    ];
+                    break;
+                case 10:
+                    $dataBody = [
+                        'Nombre completo' => $data['name_complete'],
+                        'Empresa/Rancho' => $data['bussiness_ranch'],
+                        'Cargo/Puesto' => $data['cargo_puesto'],
+                        'Área principal' => $data['q1'],
+                        '2.-Teléfono / WhatsApp' => $data['phone_contact'],
+                        '2.-Correo' => $data['email'],
+                        '2.-País' => $data['country'],
+                        '3.- Estado/Ciudad' => $data['municipality_state'],
+                        'Cargo/Puesto' => $data['Load_position'],
+                        '¿Qué le interesa?' => $data['que_le_interesa'],
+                        'Volumen requerido' => $data['volumen_requerido'],
+                        '¿Requiere certificaciones?' => $data['requiere_certificaciones'],
+                    ];
+                    break;
+                case 11:
+                    $dataBody = [
+                        'Nombre completo' => $data['name_complete'],
+                        'Empresa/Rancho' => $data['bussiness_ranch'],
+                        'Cargo/Puesto' => $data['cargo_puesto'],
+                        'Área principal' => $data['q1'],
+                        '2.-Teléfono / WhatsApp' => $data['phone_contact'],
+                        '2.-Correo' => $data['email'],
+                        '2.-País' => $data['country'],
+                        '3.- Estado/Ciudad' => $data['municipality_state'],
+                        'Tipo de colaboración' => $data['tipo_de_colaboracion'],
+                        '¿Qué busca aportar?' => $data['que_busca_aportar'],
+                    ];
+                    break;
+            }
 
             return $dataBody;
         });
