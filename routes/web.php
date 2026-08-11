@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FormsExport;
+use App\Exports\FormsExportV2Template;
 use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
 
@@ -90,6 +91,12 @@ Route::get('/forms/export', function (Request $request) {
     // 🔹 Si usas maatwebsite/excel
     return Excel::download(new FormsExport($forms, $typeId), 'formularios.xlsx');
 })->name('forms.export');
+
+
+Route::get('/forms/export-v2', function (Request $request) {
+
+    return Excel::download(new FormsExportV2Template(), 'formularios_v2.xlsx');
+})->middleware(['auth', 'verified'])->name('forms.export.v2');
 
 require __DIR__ . '/settings.php';
 

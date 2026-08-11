@@ -51,6 +51,19 @@ const filterByType = (typeId: number | null) => {
     }
   );
 };
+
+const exportExcelV2 = () => {
+  const params = new URLSearchParams({
+    search: search.value || "",
+  });
+
+  if (typeFilter.value) {
+    params.append("type_form_id", typeFilter.value.toString());
+  }
+
+  window.location.href = `/forms/export-v2?${params.toString()}`;
+};
+
 // 👇 cada vez que cambia el input, mandamos la búsqueda
 watch(search, (value) => {
   router.get(
@@ -124,6 +137,13 @@ watch(search, (value) => {
                   d="m1 1 4 4 4-4"
                 />
               </svg>
+            </button>
+
+            <button
+              class="px-3 py-1.5 text-sm rounded-lg border transition"
+              @click="exportExcelV2"
+            >
+              Exportar datos v2
             </button>
 
             <div
