@@ -59,7 +59,7 @@ class FormsExportV2 implements FromCollection, WithHeadings, WithTitle
                         '2.-Correo' => $data['email'],
                         '2.-País' => $data['country'],
                         '3.- Estado/Ciudad' => $data['municipality_state'],
-                        'Área principal' => $data['area_principal'],
+                        'Área principal' => $data['Load_position'],
                         'Canal principal' => $data['canal_principal'],
                         'Volumen requerido' => $data['volumen_requerido'],
                         'Variedades de interés' => $data['variedades_de_interes'],
