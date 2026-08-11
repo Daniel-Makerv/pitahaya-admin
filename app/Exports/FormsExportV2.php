@@ -138,7 +138,15 @@ class FormsExportV2 implements FromCollection, WithHeadings, WithTitle
     public function title(): string
     {
         $title = TypeForm::find($this->typeId);
+        $titleTrad = match ($title->str) {
+            'productive_alliances' => 'Alianzas productivas',
+            'commercial_channels' => 'Canales comerciales',
+            'technical_advice' => 'Asesoría técnica',
+            'processing_frozen' => 'Procesamiento y congelado',
+            'collaborations' => 'Colaboradores',
+            default => $title->name,
+        };
 
-        return $title->name; // Nombre de la hoja
+        return $titleTrad; // Nombre de la hoja
     }
 }
