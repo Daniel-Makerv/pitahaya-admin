@@ -14,6 +14,8 @@ class QuestionTypeSeeder extends Seeder
     public function run(): void
     {
         //
+
+
         QuestionType::insert([
             ['name' => 'Texto'],
             ['name' => 'Número'],

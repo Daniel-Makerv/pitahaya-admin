@@ -11,6 +11,7 @@ use App\Exports\FormsExportV2Template;
 use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
 
+
 Route::get('/', function () {
     return redirect('dashboard');
 })->name('home');
@@ -109,3 +110,5 @@ require __DIR__ . '/settings.php';
 // Route::get('questions', [QuestionController::class, 'index']);
 
 Route::resource('questions', QuestionController::class);
+
+
