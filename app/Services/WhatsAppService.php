@@ -12,6 +12,8 @@ class WhatsAppService
         $phoneNumberId = config('services.whatsapp.phone_number_id');
         $token = config('services.whatsapp.access_token');
 
+        $to = $this->normalizePhone($to);
+
         $response = Http::withToken($token)
             ->acceptJson()
             ->post(
@@ -35,5 +37,18 @@ class WhatsAppService
         }
 
         return $response->json();
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\D+/', '', $phone);
+
+        // México: elimina el antiguo prefijo móvil "1"
+        // 5217223491801 -> 527223491801
+        if (str_starts_with($phone, '521') && strlen($phone) === 13) {
+            $phone = '52' . substr($phone, 3);
+        }
+
+        return $phone;
     }
 }
