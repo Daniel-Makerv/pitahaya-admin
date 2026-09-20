@@ -111,4 +111,6 @@ require __DIR__ . '/settings.php';
 
 Route::resource('questions', QuestionController::class);
 
-
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+});
