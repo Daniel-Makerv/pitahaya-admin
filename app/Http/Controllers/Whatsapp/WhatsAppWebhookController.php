@@ -8,9 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppConversation;
 use App\Models\WhatsAppMessage;
+use App\Services\WhatsAppService;
 
 class WhatsAppWebhookController extends Controller
+
 {
+
+
+
     public function verify(Request $request)
     {
         $mode = $request->query('hub_mode');
@@ -34,8 +39,10 @@ class WhatsAppWebhookController extends Controller
         return response('Forbidden', 403);
     }
 
-    public function handle(Request $request)
-    {
+    public function handle(
+        Request $request,
+        WhatsAppService $whatsAppService
+    ) {
         try {
 
             $payload = $request->all();
@@ -148,6 +155,43 @@ class WhatsAppWebhookController extends Controller
                     ? now()->setTimestamp((int) $message['timestamp'])
                     : now(),
             ]);
+
+            /*
+ * Responder automáticamente únicamente
+ * cuando la conversación está en modo IA.
+ */
+            if ($conversation->mode === 'ai' && $type === 'text') {
+
+                $reply = '¡Hola! Soy el asistente de Pitamex 🌱 ¿En qué podemos ayudarte?';
+
+                $response = $whatsAppService->sendText(
+                    $contact->phone,
+                    $reply
+                );
+
+                $outboundMessageId = data_get(
+                    $response,
+                    'messages.0.id'
+                );
+
+                /*
+     * Guardar mensaje enviado.
+     */
+                WhatsAppMessage::create([
+                    'whatsapp_conversation_id' => $conversation->id,
+                    'meta_message_id' => $outboundMessageId,
+                    'direction' => 'outbound',
+                    'sender_type' => 'ai',
+                    'type' => 'text',
+                    'body' => $reply,
+                    'payload' => $response,
+                    'sent_at' => now(),
+                ]);
+
+                $conversation->update([
+                    'last_message_at' => now(),
+                ]);
+            }
 
             /*
          * Actualizar actividad de conversación.
