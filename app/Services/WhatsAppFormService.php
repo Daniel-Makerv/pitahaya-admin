@@ -11,8 +11,7 @@ class WhatsAppFormService
 {
     public function __construct(
         private WhatsAppService $whatsAppService
-    ) {
-    }
+    ) {}
 
     public function start(
         WhatsAppConversation $conversation
@@ -60,6 +59,9 @@ class WhatsAppFormService
             'started_at' => now(),
         ]);
 
+        $this->sendWelcomeMessage($conversation);
+
+
         $this->sendQuestion(
             $conversation,
             $question
@@ -78,6 +80,22 @@ class WhatsAppFormService
         $this->whatsAppService->sendText(
             $conversation->contact->phone,
             $question->text
+        );
+    }
+
+    private function sendWelcomeMessage(
+        WhatsAppConversation $conversation
+    ): void {
+
+        $conversation->loadMissing('contact');
+
+        $message = "¡Qué tal! Soy el asistente de Pitamex 🌵\n"
+            . "Te hago 6 preguntas para conocer tu huerta. "
+            . "Tarda menos de dos minutos.";
+
+        $this->whatsAppService->sendText(
+            $conversation->contact->phone,
+            $message
         );
     }
 }
