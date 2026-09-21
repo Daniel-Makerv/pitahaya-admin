@@ -6,6 +6,8 @@ use App\Models\WhatsAppConversation;
 use App\Models\WhatsAppForm;
 use App\Models\WhatsAppFormSession;
 use RuntimeException;
+use App\Models\WhatsAppAnswer;
+use App\Models\WhatsAppQuestion;
 
 class WhatsAppFormService
 {
@@ -96,6 +98,79 @@ class WhatsAppFormService
         $this->whatsAppService->sendText(
             $conversation->contact->phone,
             $message
+        );
+    }
+
+    public function answer(
+        WhatsAppFormSession $session,
+        string $answer
+    ): void {
+
+        $question = $session->currentQuestion;
+
+        if (!$question) {
+            return;
+        }
+
+        /*
+     * Guardar respuesta actual.
+     */
+        WhatsAppAnswer::updateOrCreate(
+            [
+                'form_session_id' => $session->id,
+                'question_id' => $question->id,
+            ],
+            [
+                'answer' => $answer,
+                'option_id' => null,
+                'score' => 0,
+            ]
+        );
+
+        /*
+     * Buscar la siguiente pregunta
+     * dentro del mismo bloque.
+     */
+        $nextQuestion = WhatsAppQuestion::query()
+            ->where('block_id', $session->current_block_id)
+            ->where('active', true)
+            ->where('sort_order', '>', $question->sort_order)
+            ->orderBy('sort_order')
+            ->first();
+
+        /*
+     * Si existe otra pregunta,
+     * avanzamos hacia ella.
+     */
+        if ($nextQuestion) {
+
+            $session->update([
+                'current_question_id' => $nextQuestion->id,
+            ]);
+
+            $this->sendQuestion(
+                $session->conversation,
+                $nextQuestion
+            );
+
+            return;
+        }
+
+        /*
+     * Por ahora, si ya no existen
+     * más preguntas terminamos.
+     *
+     * Después aquí meteremos next_block_id.
+     */
+        $session->update([
+            'current_question_id' => null,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        $this->whatsAppService->sendText(
+            $session->conversation->contact->phone,
+            '¡Gracias! Hemos terminado el formulario. 🌵'
         );
     }
 }

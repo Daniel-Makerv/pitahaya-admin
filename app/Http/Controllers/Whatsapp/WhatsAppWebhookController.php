@@ -11,6 +11,8 @@ use App\Models\WhatsAppMessage;
 use App\Services\WhatsAppService;
 use App\Services\WhatsAppFormService;
 use App\Models\WhatsAppFormSession;
+use App\Models\WhatsAppAnswer;
+use App\Models\WhatsAppQuestion;
 class WhatsAppWebhookController extends Controller
 
 {
@@ -170,7 +172,16 @@ class WhatsAppWebhookController extends Controller
                     ->first();
 
                 if (!$activeSession) {
+
+                    // Primer mensaje: iniciar formulario
                     $formService->start($conversation);
+                } else {
+
+                    // Ya estamos contestando el formulario
+                    $formService->answer(
+                        $activeSession,
+                        $body
+                    );
                 }
             }
 
