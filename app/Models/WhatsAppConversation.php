@@ -10,7 +10,7 @@ class WhatsAppConversation extends Model
 
     protected $guarded = [];
 
-     protected $casts = [
+    protected $casts = [
         'last_message_at' => 'datetime',
     ];
 
@@ -28,5 +28,22 @@ class WhatsAppConversation extends Model
             WhatsAppMessage::class,
             'whatsapp_conversation_id'
         );
+    }
+
+    public function formSessions()
+    {
+        return $this->hasMany(
+            WhatsAppFormSession::class,
+            'whatsapp_conversation_id'
+        );
+    }
+
+    public function activeFormSession()
+    {
+        return $this->hasOne(
+            WhatsAppFormSession::class,
+            'whatsapp_conversation_id'
+        )->where('status', 'in_progress')
+            ->latestOfMany();
     }
 }

@@ -10,6 +10,7 @@ use App\Exports\FormsExport;
 use App\Exports\FormsExportV2Template;
 use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
+use App\Http\Controllers\{Questions};
 
 
 Route::get('/', function () {
@@ -114,3 +115,41 @@ Route::resource('questions', QuestionController::class);
 Route::get('/privacy-policy', function () {
     return view('privacy-policy');
 });
+
+
+
+Route::prefix('whatsapp/forms')
+    ->name('whatsapp.forms.')
+    ->group(function () {
+
+        Route::get('/', [Questions\WhatsAppFormController::class, 'index'])
+            ->name('index');
+
+        Route::get('/create', [Questions\WhatsAppFormController::class, 'create'])
+            ->name('create');
+
+        Route::post('/', [Questions\WhatsAppFormController::class, 'store'])
+            ->name('store');
+
+        Route::get('/{form}/edit', [Questions\WhatsAppFormController::class, 'edit'])
+            ->name('edit');
+
+
+        Route::put('/{form}', [Questions\WhatsAppFormController::class, 'update'])
+            ->name('update');
+
+        Route::delete('/{form}', [Questions\WhatsAppFormController::class, 'destroy'])
+            ->name('destroy');
+
+
+        // BLOQUES
+        Route::post(
+            '/{form}/blocks',
+            [Questions\WhatsAppFormBlockController::class, 'store']
+        )->name('blocks.store');
+
+        Route::post(
+            '/{form}/blocks/{block}/questions',
+            [Questions\WhatsAppQuestionController::class, 'store']
+        )->name('questions.store');
+    });

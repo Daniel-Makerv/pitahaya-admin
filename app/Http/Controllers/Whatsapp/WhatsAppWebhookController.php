@@ -9,7 +9,8 @@ use App\Models\WhatsAppContact;
 use App\Models\WhatsAppConversation;
 use App\Models\WhatsAppMessage;
 use App\Services\WhatsAppService;
-
+use App\Services\WhatsAppFormService;
+use App\Models\WhatsAppFormSession;
 class WhatsAppWebhookController extends Controller
 
 {
@@ -41,7 +42,8 @@ class WhatsAppWebhookController extends Controller
 
     public function handle(
         Request $request,
-        WhatsAppService $whatsAppService
+        WhatsAppService $whatsAppService,
+        WhatsAppFormService $formService
     ) {
         try {
 
@@ -156,46 +158,22 @@ class WhatsAppWebhookController extends Controller
                     : now(),
             ]);
 
-            /*
- * Responder automáticamente únicamente
- * cuando la conversación está en modo IA.
- */
+
             if ($conversation->mode === 'ai' && $type === 'text') {
 
-                $reply = '¡Hola! Soy el asistente de Pitamex 🌱 ¿En qué podemos ayudarte?';
+                $activeSession = WhatsAppFormSession::query()
+                    ->where(
+                        'whatsapp_conversation_id',
+                        $conversation->id
+                    )
+                    ->where('status', 'in_progress')
+                    ->first();
 
-                $response = $whatsAppService->sendText(
-                    $contact->phone,
-                    $reply
-                );
-
-                $outboundMessageId = data_get(
-                    $response,
-                    'messages.0.id'
-                );
-
-                /*
-     * Guardar mensaje enviado.
-     */
-                WhatsAppMessage::create([
-                    'whatsapp_conversation_id' => $conversation->id,
-                    'meta_message_id' => $outboundMessageId,
-                    'direction' => 'outbound',
-                    'sender_type' => 'ai',
-                    'type' => 'text',
-                    'body' => $reply,
-                    'payload' => $response,
-                    'sent_at' => now(),
-                ]);
-
-                $conversation->update([
-                    'last_message_at' => now(),
-                ]);
+                if (!$activeSession) {
+                    $formService->start($conversation);
+                }
             }
 
-            /*
-         * Actualizar actividad de conversación.
-         */
             $conversation->update([
                 'last_message_at' => now(),
             ]);

@@ -16,7 +16,7 @@ import { forms } from '@/routes';
 import { questions } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, BookOpenCheck, Book } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, BookOpenCheck, Book,  MessageCircle } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
@@ -33,6 +33,11 @@ const mainNavItems: NavItem[] = [
         title: 'Preguntas',
          href: '/questions',
         icon: BookOpenCheck,
+    },
+    {
+        title: 'WhatsApp',
+        href: '/whatsapp/forms',
+        icon: MessageCircle,
     },
 ];
 
