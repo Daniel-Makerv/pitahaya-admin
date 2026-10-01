@@ -19,19 +19,53 @@ class WhatsAppQuestionController extends Controller
 
         $data = $request->validate([
             'text' => ['required', 'string'],
+
             'type' => [
                 'required',
                 'in:text,number,single_choice,multiple_choice',
             ],
+
             'required' => ['required', 'boolean'],
+
+            'options' => ['nullable', 'array'],
+
+            'options.*.text' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'options.*.score' => [
+                'nullable',
+                'integer',
+            ],
         ]);
+
+        /*
+     * Si es selección única o múltiple,
+     * debe tener al menos una opción.
+     */
+        if (
+            in_array(
+                $data['type'],
+                ['single_choice', 'multiple_choice']
+            ) &&
+            empty($data['options'])
+        ) {
+            return back()->withErrors([
+                'options' => 'Agrega al menos una opción.',
+            ]);
+        }
 
         $lastOrder = WhatsAppQuestion::where(
             'block_id',
             $block->id
         )->max('sort_order');
 
-        WhatsAppQuestion::create([
+        /*
+     * Crear pregunta
+     */
+        $question = WhatsAppQuestion::create([
             'block_id' => $block->id,
             'text' => $data['text'],
             'type' => $data['type'],
@@ -39,6 +73,26 @@ class WhatsAppQuestionController extends Controller
             'required' => $data['required'],
             'active' => true,
         ]);
+
+        /*
+     * Crear opciones
+     */
+        if (
+            in_array(
+                $question->type,
+                ['single_choice', 'multiple_choice']
+            )
+        ) {
+            foreach ($data['options'] ?? [] as $index => $option) {
+
+                $question->options()->create([
+                    'text' => $option['text'],
+                    'score' => $option['score'] ?? 0,
+                    'sort_order' => $index + 1,
+                    'active' => true,
+                ]);
+            }
+        }
 
         return back()->with(
             'success',

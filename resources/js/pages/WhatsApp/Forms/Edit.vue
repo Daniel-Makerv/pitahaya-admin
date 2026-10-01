@@ -57,7 +57,22 @@ const questionForm = useForm({
     text: '',
     type: 'text',
     required: true,
+    options: [] as {
+        text: string;
+        score: number;
+    }[],
 });
+
+const addOption = () => {
+    questionForm.options.push({
+        text: '',
+        score: 0,
+    });
+};
+
+const removeOption = (index: number) => {
+    questionForm.options.splice(index, 1);
+};
 
 const openQuestionModal = (block: any) => {
     selectedBlock.value = block;
@@ -526,6 +541,82 @@ const breadcrumbs: BreadcrumbItem[] = [
                             class="mt-1 text-sm text-red-600"
                         >
                             {{ questionForm.errors.type }}
+                        </p>
+                    </div>
+
+                    <!-- Opciones -->
+                    <div
+                        v-if="
+                            questionForm.type === 'single_choice' ||
+                            questionForm.type === 'multiple_choice'
+                        "
+                        class="mb-5"
+                    >
+                        <div class="mb-3 flex items-center justify-between">
+                            <label
+                                class="block text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Opciones
+                            </label>
+
+                            <button
+                                type="button"
+                                @click="addOption"
+                                class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                            >
+                                + Agregar opción
+                            </button>
+                        </div>
+
+                        <div
+                            v-if="!questionForm.options.length"
+                            class="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400"
+                        >
+                            Agrega las respuestas que podrá seleccionar el
+                            prospecto.
+                        </div>
+
+                        <div v-else class="space-y-3">
+                            <div
+                                v-for="(option, index) in questionForm.options"
+                                :key="index"
+                                class="flex items-center gap-2"
+                            >
+                                <div
+                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                >
+                                    {{ index + 1 }}
+                                </div>
+
+                                <input
+                                    v-model="option.text"
+                                    type="text"
+                                    :placeholder="`Opción ${index + 1}`"
+                                    class="block flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                />
+
+                                <input
+                                    v-model.number="option.score"
+                                    type="number"
+                                    placeholder="Puntos"
+                                    class="block w-24 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                />
+
+                                <button
+                                    type="button"
+                                    @click="removeOption(index)"
+                                    class="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+
+                        <p
+                            v-if="questionForm.errors.options"
+                            class="mt-2 text-sm text-red-600"
+                        >
+                            {{ questionForm.errors.options }}
                         </p>
                     </div>
 

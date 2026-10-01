@@ -74,15 +74,107 @@ class WhatsAppFormService
 
     private function sendQuestion(
         WhatsAppConversation $conversation,
-        $question
+        WhatsAppQuestion $question
     ): void {
 
         $conversation->loadMissing('contact');
 
-        $this->whatsAppService->sendText(
-            $conversation->contact->phone,
-            $question->text
-        );
+        /*
+     * Preguntas normales.
+     */
+        if (
+            in_array(
+                $question->type,
+                ['text', 'number']
+            )
+        ) {
+            $this->whatsAppService->sendText(
+                $conversation->contact->phone,
+                $question->text
+            );
+
+            return;
+        }
+
+        /*
+     * Pregunta de selección única.
+     */
+        if ($question->type === 'single_choice') {
+
+            $options = $question->options()
+                ->where('active', true)
+                ->orderBy('sort_order')
+                ->get();
+
+            if ($options->isEmpty()) {
+                $this->whatsAppService->sendText(
+                    $conversation->contact->phone,
+                    $question->text
+                );
+
+                return;
+            }
+
+            /*
+         * WhatsApp permite máximo 3 reply buttons.
+         */
+            if ($options->count() <= 3) {
+
+                $this->whatsAppService->sendButtons(
+                    $conversation->contact->phone,
+                    $question->text,
+                    $options->all()
+                );
+
+                return;
+            }
+
+            /*
+         * Después agregaremos sendList()
+         * para preguntas con más de 3 opciones.
+         */
+            $message = $question->text . "\n\n";
+
+            foreach ($options as $index => $option) {
+                $message .= ($index + 1)
+                    . '. '
+                    . $option->text
+                    . "\n";
+            }
+
+            $this->whatsAppService->sendText(
+                $conversation->contact->phone,
+                $message
+            );
+
+            return;
+        }
+
+        /*
+     * Multiple choice lo implementaremos después.
+     * Por ahora mostramos las opciones como texto.
+     */
+        if ($question->type === 'multiple_choice') {
+
+            $options = $question->options()
+                ->where('active', true)
+                ->orderBy('sort_order')
+                ->get();
+
+            $message = $question->text . "\n\n";
+
+            foreach ($options as $index => $option) {
+                $message .= ($index + 1)
+                    . '. '
+                    . $option->text
+                    . "\n";
+            }
+
+            $this->whatsAppService->sendText(
+                $conversation->contact->phone,
+                $message
+            );
+        }
     }
 
     private function sendWelcomeMessage(
