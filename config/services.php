@@ -40,6 +40,11 @@ return [
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+
+        'app_id' => env('META_APP_ID'),
+        'embedded_signup_config_id' => env(
+            'WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID'
+        ),
     ],
 
 ];

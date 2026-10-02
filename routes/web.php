@@ -118,6 +118,18 @@ Route::get('/privacy-policy', function () {
 
 
 
+Route::middleware('auth')->group(function () {
+    Route::get('/whatsapp/settings', function () {
+        return Inertia::render('WhatsApp/Settings/Index', [
+            'metaAppId' => config('services.whatsapp.app_id'),
+            'configId' => config(
+                'services.whatsapp.embedded_signup_config_id'
+            ),
+        ]);
+    })->name('whatsapp.settings');
+});
+
+
 Route::prefix('whatsapp/forms')
     ->name('whatsapp.forms.')
     ->group(function () {
