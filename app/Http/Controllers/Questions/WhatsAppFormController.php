@@ -6,6 +6,7 @@ use App\Models\WhatsAppForm;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
+use App\Models\WhatsAppFormBlock;
 
 class WhatsAppFormController extends Controller
 {
@@ -79,5 +80,20 @@ class WhatsAppFormController extends Controller
         return redirect()
             ->route('whatsapp.forms.index')
             ->with('success', 'Formulario eliminado correctamente.');
+    }
+
+    public function destroyBlock(WhatsAppFormBlock $block)
+    {
+        foreach ($block->questions as $question) {
+            $question->options()->delete();
+            $question->delete();
+        }
+
+        $block->delete();
+
+        return back()->with(
+            'success',
+            'Bloque eliminado correctamente.'
+        );
     }
 }

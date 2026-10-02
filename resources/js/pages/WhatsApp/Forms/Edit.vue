@@ -254,6 +254,20 @@ const updateQuestion = () => {
     });
 };
 
+const deleteBlock = (block: any) => {
+    if (
+        !confirm(
+            `¿Eliminar el bloque "${block.name}" y todas sus preguntas y opciones?`,
+        )
+    ) {
+        return;
+    }
+
+    router.delete(`/whatsapp/blocks/${block.id}`, {
+        preserveScroll: true,
+    });
+};
+
 const deleteQuestion = (question: any) => {
     if (
         !confirm(
@@ -408,13 +422,23 @@ const reorderQuestions = (block: any) => {
                                 </p>
                             </div>
 
-                            <button
-                                type="button"
-                                @click="openQuestionModal(block)"
-                                class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                            >
-                                + Agregar pregunta
-                            </button>
+                            <div class="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    @click="openQuestionModal(block)"
+                                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                >
+                                    + Agregar pregunta
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="deleteBlock(block)"
+                                    class="text-sm font-medium text-red-600 hover:underline dark:text-red-400"
+                                >
+                                    Eliminar bloque
+                                </button>
+                            </div>
                         </div>
                         <!-- ↑ aquí cerramos el header -->
 

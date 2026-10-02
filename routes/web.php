@@ -199,3 +199,11 @@ Route::delete(
     '/whatsapp/question-options/{option}',
     [Questions\WhatsAppQuestionOptionController::class, 'destroy']
 )->name('whatsapp.questions.options.destroy');
+
+
+
+//bloques
+Route::delete(
+    '/whatsapp/blocks/{block}',
+    [Questions\WhatsAppFormController::class, 'destroyBlock']
+)->name('whatsapp.blocks.destroy');
