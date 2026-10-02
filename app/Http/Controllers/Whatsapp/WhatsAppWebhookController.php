@@ -13,6 +13,7 @@ use App\Services\WhatsAppFormService;
 use App\Models\WhatsAppFormSession;
 use App\Models\WhatsAppAnswer;
 use App\Models\WhatsAppQuestion;
+use App\Services\WhatsAppAiService;
 
 class WhatsAppWebhookController extends Controller
 
@@ -46,7 +47,8 @@ class WhatsAppWebhookController extends Controller
     public function handle(
         Request $request,
         WhatsAppService $whatsAppService,
-        WhatsAppFormService $formService
+        WhatsAppFormService $formService,
+        WhatsAppAiService $aiService
     ) {
         try {
 
@@ -207,9 +209,14 @@ class WhatsAppWebhookController extends Controller
              * Más adelante aquí mandaremos
              * el mensaje a la IA.
              */
+                        $response = $aiService->reply(
+                            $conversation,
+                            $body
+                        );
+
                         $whatsAppService->sendText(
                             $contact->phone,
-                            'Gracias por escribirnos 🌵 Ya tenemos tus respuestas. ¿En qué más puedo ayudarte?'
+                            $response
                         );
                     } else {
 
