@@ -177,6 +177,12 @@ Route::prefix('whatsapp/forms')
         )->name('questions.reorder');
     });
 
+
+Route::put(
+    '/whatsapp/questions/{question}',
+    [Questions\WhatsAppQuestionController::class, 'update']
+)->name('whatsapp.questions.update');
+
 // Agregar opciones a preguntas existentes
 Route::post(
     '/whatsapp/questions/{question}/options',

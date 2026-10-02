@@ -216,6 +216,44 @@ const addNewOption = () => {
     );
 };
 
+// editar pregunta
+const showEditQuestionModal = ref(false);
+const editingQuestion = ref<any>(null);
+
+const editQuestionForm = useForm({
+    text: '',
+});
+
+const openEditQuestion = (question: any) => {
+    editingQuestion.value = question;
+    editQuestionForm.text = question.text;
+    editQuestionForm.clearErrors();
+
+    showEditQuestionModal.value = true;
+};
+
+const closeEditQuestion = () => {
+    showEditQuestionModal.value = false;
+    editingQuestion.value = null;
+
+    editQuestionForm.reset();
+    editQuestionForm.clearErrors();
+};
+
+const updateQuestion = () => {
+    if (!editingQuestion.value) {
+        return;
+    }
+
+    editQuestionForm.put(`/whatsapp/questions/${editingQuestion.value.id}`, {
+        preserveScroll: true,
+
+        onSuccess: () => {
+            closeEditQuestion();
+        },
+    });
+};
+
 const moveQuestion = (question: any, direction: 'up' | 'down') => {
     router.patch(
         `/whatsapp/forms/questions/${question.id}/move`,
@@ -443,19 +481,37 @@ const reorderQuestions = (block: any) => {
                                                 </div>
                                             </div>
 
-                                            <button
-                                                v-if="
-                                                    question.type ===
-                                                        'single_choice' ||
-                                                    question.type ===
-                                                        'multiple_choice'
-                                                "
-                                                type="button"
-                                                @click="openOptions(question)"
-                                                class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                            <div
+                                                class="flex items-center gap-3"
                                             >
-                                                + Opciones
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    @click="
+                                                        openEditQuestion(
+                                                            question,
+                                                        )
+                                                    "
+                                                    class="text-sm font-medium text-gray-600 hover:underline dark:text-gray-300"
+                                                >
+                                                    Editar
+                                                </button>
+
+                                                <button
+                                                    v-if="
+                                                        question.type ===
+                                                            'single_choice' ||
+                                                        question.type ===
+                                                            'multiple_choice'
+                                                    "
+                                                    type="button"
+                                                    @click="
+                                                        openOptions(question)
+                                                    "
+                                                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                >
+                                                    + Opciones
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -960,6 +1016,89 @@ const reorderQuestions = (block: any) => {
                         Cerrar
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal editar pregunta -->
+        <div
+            v-if="showEditQuestionModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="closeEditQuestion"
+        >
+            <div
+                class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800"
+            >
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h2
+                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                        >
+                            Editar pregunta
+                        </h2>
+
+                        <p
+                            class="mt-1 text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            Modifica el texto de la pregunta.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="closeEditQuestion"
+                        class="text-xl text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <form @submit.prevent="updateQuestion">
+                    <div>
+                        <label
+                            class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                            Pregunta
+                        </label>
+
+                        <textarea
+                            v-model="editQuestionForm.text"
+                            rows="4"
+                            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+
+                        <p
+                            v-if="editQuestionForm.errors.text"
+                            class="mt-2 text-sm text-red-600"
+                        >
+                            {{ editQuestionForm.errors.text }}
+                        </p>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            @click="closeEditQuestion"
+                            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            :disabled="
+                                editQuestionForm.processing ||
+                                !editQuestionForm.text.trim()
+                            "
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {{
+                                editQuestionForm.processing
+                                    ? 'Guardando...'
+                                    : 'Guardar cambios'
+                            }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

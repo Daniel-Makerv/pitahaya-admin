@@ -166,4 +166,22 @@ class WhatsAppQuestionController extends Controller
 
         return back();
     }
+
+    public function update(
+        Request $request,
+        WhatsAppQuestion $question
+    ) {
+        $validated = $request->validate([
+            'text' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $question->update([
+            'text' => $validated['text'],
+        ]);
+
+        return back()->with(
+            'success',
+            'Pregunta actualizada correctamente.'
+        );
+    }
 }
