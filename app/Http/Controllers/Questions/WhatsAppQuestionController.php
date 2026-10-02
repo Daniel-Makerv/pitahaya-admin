@@ -99,4 +99,71 @@ class WhatsAppQuestionController extends Controller
             'Pregunta creada correctamente.'
         );
     }
+
+    public function move(Request $request, WhatsAppQuestion $question)
+    {
+        $data = $request->validate([
+            'direction' => ['required', 'in:up,down'],
+        ]);
+
+        $query = WhatsAppQuestion::where('block_id', $question->block_id);
+
+        if ($data['direction'] === 'up') {
+            $otherQuestion = $query
+                ->where('sort_order', '<', $question->sort_order)
+                ->orderByDesc('sort_order')
+                ->first();
+        } else {
+            $otherQuestion = $query
+                ->where('sort_order', '>', $question->sort_order)
+                ->orderBy('sort_order')
+                ->first();
+        }
+
+        if (!$otherQuestion) {
+            return back();
+        }
+
+        $currentOrder = $question->sort_order;
+
+        $question->update([
+            'sort_order' => $otherQuestion->sort_order,
+        ]);
+
+        $otherQuestion->update([
+            'sort_order' => $currentOrder,
+        ]);
+
+        return back();
+    }
+
+    public function reorder(
+        Request $request,
+        WhatsAppFormBlock $block
+    ) {
+        $data = $request->validate([
+            'questions' => ['required', 'array'],
+
+            'questions.*.id' => [
+                'required',
+                'integer',
+            ],
+
+            'questions.*.sort_order' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+        ]);
+
+        foreach ($data['questions'] as $item) {
+            WhatsAppQuestion::where('id', $item['id'])
+                ->where('block_id', $block->id)
+                ->update([
+                    'sort_order' => $item['sort_order'],
+                ]);
+        }
+
+        return back();
+    }
 }

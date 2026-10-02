@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import draggable from 'vuedraggable';
 
 interface WhatsAppForm {
     id: number;
@@ -119,6 +120,131 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: `/whatsapp/forms/${props.form.id}/edit`,
     },
 ];
+
+const selectedQuestion = ref<any>(null);
+const showOptionsModal = ref(false);
+
+const optionForm = useForm({
+    text: '',
+    score: 0,
+});
+
+const openOptions = (question: any) => {
+    selectedQuestion.value = question;
+
+    optionForm.reset();
+    optionForm.clearErrors();
+
+    showOptionsModal.value = true;
+};
+
+const closeOptionsModal = () => {
+    showOptionsModal.value = false;
+    selectedQuestion.value = null;
+
+    optionForm.reset();
+    optionForm.clearErrors();
+};
+
+const createOption = () => {
+    if (!selectedQuestion.value) {
+        return;
+    }
+
+    optionForm.post(
+        `/whatsapp/questions/${selectedQuestion.value.id}/options`,
+        {
+            preserveScroll: true,
+
+            onSuccess: () => {
+                optionForm.reset();
+                optionForm.score = 0;
+            },
+        },
+    );
+};
+
+const deleteOption = (option: any) => {
+    if (!confirm(`¿Eliminar la opción "${option.text}"?`)) {
+        return;
+    }
+
+    router.delete(`/whatsapp/question-options/${option.id}`, {
+        preserveScroll: true,
+    });
+};
+
+const newOptionForm = useForm({
+    text: '',
+    score: 0,
+    type: 'option',
+    required: false,
+});
+
+const addNewOption = () => {
+    if (!selectedQuestion.value || !newOptionForm.text.trim()) {
+        return;
+    }
+
+    console.log('Agregando opción', {
+        question_id: selectedQuestion.value.id,
+        text: newOptionForm.text,
+        score: newOptionForm.score,
+    });
+
+    newOptionForm.post(
+        `/whatsapp/questions/${selectedQuestion.value.id}/options`,
+        {
+            preserveScroll: true,
+            preserveState: true,
+
+            onSuccess: () => {
+                console.log('Opción agregada correctamente');
+
+                newOptionForm.reset();
+                newOptionForm.score = 0;
+            },
+
+            onError: (errors) => {
+                console.error('Error agregando opción:', errors);
+            },
+
+            onFinish: () => {
+                console.log('Petición terminada');
+            },
+        },
+    );
+};
+
+const moveQuestion = (question: any, direction: 'up' | 'down') => {
+    router.patch(
+        `/whatsapp/forms/questions/${question.id}/move`,
+        {
+            direction,
+        },
+        {
+            preserveScroll: true,
+        },
+    );
+};
+
+const reorderQuestions = (block: any) => {
+    const questions = block.questions.map((question: any, index: number) => ({
+        id: question.id,
+        sort_order: index + 1,
+    }));
+
+    router.patch(
+        `/whatsapp/forms/blocks/${block.id}/questions/reorder`,
+        {
+            questions,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+        },
+    );
+};
 </script>
 
 <template>
@@ -245,69 +371,95 @@ const breadcrumbs: BreadcrumbItem[] = [
                             v-if="block.questions?.length"
                             class="mt-5 space-y-3"
                         >
-                            <div
-                                v-for="(question, index) in block.questions"
-                                :key="question.id"
-                                class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                            <draggable
+                                v-if="block.questions?.length"
+                                v-model="block.questions"
+                                item-key="id"
+                                handle=".drag-handle"
+                                class="mt-5 space-y-3"
+                                ghost-class="opacity-40"
+                                @end="reorderQuestions(block)"
                             >
-                                <div
-                                    class="flex items-start justify-between gap-4"
-                                >
-                                    <div class="flex items-start gap-3">
+                                <template #item="{ element: question, index }">
+                                    <div
+                                        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                                    >
                                         <div
-                                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                            class="flex items-start justify-between gap-4"
                                         >
-                                            {{ index + 1 }}
-                                        </div>
-
-                                        <div>
-                                            <p
-                                                class="font-medium text-gray-900 dark:text-white"
-                                            >
-                                                {{ question.text }}
-                                            </p>
-
-                                            <div
-                                                class="mt-2 flex items-center gap-2"
-                                            >
-                                                <span
-                                                    class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                            <div class="flex items-start gap-3">
+                                                <!-- Arrastrar -->
+                                                <button
+                                                    type="button"
+                                                    class="drag-handle mt-1 cursor-grab text-xl text-gray-400 select-none hover:text-gray-700 active:cursor-grabbing dark:hover:text-gray-200"
+                                                    title="Arrastrar para ordenar"
                                                 >
-                                                    {{
-                                                        question.type === 'text'
-                                                            ? 'Texto'
-                                                            : question.type ===
-                                                                'number'
-                                                              ? 'Número'
-                                                              : question.type ===
-                                                                  'single_choice'
-                                                                ? 'Selección única'
-                                                                : 'Selección múltiple'
-                                                    }}
-                                                </span>
+                                                    ⋮⋮
+                                                </button>
 
-                                                <span
-                                                    v-if="question.required"
-                                                    class="text-xs font-medium text-red-500"
+                                                <!-- Número -->
+                                                <div
+                                                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                                 >
-                                                    Obligatoria
-                                                </span>
+                                                    {{ index + 1 }}
+                                                </div>
+
+                                                <div>
+                                                    <p
+                                                        class="font-medium text-gray-900 dark:text-white"
+                                                    >
+                                                        {{ question.text }}
+                                                    </p>
+
+                                                    <div
+                                                        class="mt-2 flex items-center gap-2"
+                                                    >
+                                                        <span
+                                                            class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                        >
+                                                            {{
+                                                                question.type ===
+                                                                'text'
+                                                                    ? 'Texto'
+                                                                    : question.type ===
+                                                                        'number'
+                                                                      ? 'Número'
+                                                                      : question.type ===
+                                                                          'single_choice'
+                                                                        ? 'Selección única'
+                                                                        : 'Selección múltiple'
+                                                            }}
+                                                        </span>
+
+                                                        <span
+                                                            v-if="
+                                                                question.required
+                                                            "
+                                                            class="text-xs font-medium text-red-500"
+                                                        >
+                                                            Obligatoria
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            <button
+                                                v-if="
+                                                    question.type ===
+                                                        'single_choice' ||
+                                                    question.type ===
+                                                        'multiple_choice'
+                                                "
+                                                type="button"
+                                                @click="openOptions(question)"
+                                                class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                            >
+                                                + Opciones
+                                            </button>
                                         </div>
                                     </div>
-
-                                    <button
-                                        v-if="
-                                            question.type === 'single_choice' ||
-                                            question.type === 'multiple_choice'
-                                        "
-                                        type="button"
-                                        class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                    >
-                                        + Opción
-                                    </button>
-                                </div>
-                            </div>
+                                </template>
+                            </draggable>
                         </div>
 
                         <!-- Sin preguntas -->
@@ -668,6 +820,146 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal opciones de pregunta -->
+        <div
+            v-if="showOptionsModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="closeOptionsModal"
+        >
+            <div
+                class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800"
+            >
+                <!-- Header -->
+                <div class="mb-6 flex items-start justify-between">
+                    <div>
+                        <h2
+                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                        >
+                            Opciones
+                        </h2>
+
+                        <p
+                            class="mt-1 text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            {{ selectedQuestion?.text }}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="closeOptionsModal"
+                        class="text-xl text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <!-- Opciones existentes -->
+                <div v-if="selectedQuestion?.options?.length" class="space-y-3">
+                    <div
+                        v-for="(option, index) in selectedQuestion.options"
+                        :key="option.id ?? index"
+                        class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                    >
+                        <div
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                        >
+                            {{ index + 1 }}
+                        </div>
+
+                        <div class="flex-1">
+                            <p
+                                class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                {{ option.text }}
+                            </p>
+
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ option.score ?? 0 }} puntos
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            @click="deleteOption(option)"
+                            class="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    v-else
+                    class="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400"
+                >
+                    Esta pregunta todavía no tiene opciones.
+                </div>
+
+                <!-- Agregar nueva -->
+                <!-- Agregar nueva -->
+                <div
+                    class="mt-6 border-t border-gray-200 pt-5 dark:border-gray-700"
+                >
+                    <p
+                        class="mb-3 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                        Agregar nueva opción
+                    </p>
+
+                    <div class="flex gap-2">
+                        <input
+                            v-model="newOptionForm.text"
+                            type="text"
+                            placeholder="Nueva opción"
+                            class="block flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            @keyup.enter="addNewOption"
+                        />
+
+                        <input
+                            v-model.number="newOptionForm.score"
+                            type="number"
+                            placeholder="Puntos"
+                            class="block w-24 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+
+                        <button
+                            type="button"
+                            @click="addNewOption"
+                            :disabled="
+                                newOptionForm.processing ||
+                                !newOptionForm.text.trim()
+                            "
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {{
+                                newOptionForm.processing
+                                    ? 'Agregando...'
+                                    : 'Agregar'
+                            }}
+                        </button>
+                    </div>
+
+                    <p
+                        v-if="newOptionForm.errors.text"
+                        class="mt-2 text-sm text-red-600"
+                    >
+                        {{ newOptionForm.errors.text }}
+                    </p>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button
+                        type="button"
+                        @click="closeOptionsModal"
+                        class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                        Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     </AppLayout>

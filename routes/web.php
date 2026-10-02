@@ -164,4 +164,26 @@ Route::prefix('whatsapp/forms')
             '/{form}/blocks/{block}/questions',
             [Questions\WhatsAppQuestionController::class, 'store']
         )->name('questions.store');
+
+
+        Route::patch(
+            '/questions/{question}/move',
+            [Questions\WhatsAppQuestionController::class, 'move']
+        )->name('questions.move');
+
+        Route::patch(
+            '/blocks/{block}/questions/reorder',
+            [Questions\WhatsAppQuestionController::class, 'reorder']
+        )->name('questions.reorder');
     });
+
+// Agregar opciones a preguntas existentes
+Route::post(
+    '/whatsapp/questions/{question}/options',
+    [Questions\WhatsAppQuestionOptionController::class, 'store']
+)->name('whatsapp.questions.options.store');
+
+Route::delete(
+    '/whatsapp/question-options/{option}',
+    [Questions\WhatsAppQuestionOptionController::class, 'destroy']
+)->name('whatsapp.questions.options.destroy');
