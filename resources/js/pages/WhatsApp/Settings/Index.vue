@@ -120,9 +120,10 @@ const connectWhatsApp = () => {
             config_id: props.configId,
             response_type: 'code',
             override_default_response_type: true,
+
             extras: {
                 setup: {},
-                featureType: '',
+                featureType: 'whatsapp_business_app_onboarding',
                 sessionInfoVersion: '3',
             },
         },
