@@ -8,6 +8,7 @@ use App\Models\WhatsAppFormSession;
 use RuntimeException;
 use App\Models\WhatsAppAnswer;
 use App\Models\WhatsAppQuestion;
+use Illuminate\Support\Facades\Log;
 
 class WhatsAppFormService
 {
@@ -79,6 +80,12 @@ class WhatsAppFormService
 
         $conversation->loadMissing('contact');
 
+        Log::info('DEBUG PREGUNTA WHATSAPP', [
+            'id' => $question->id,
+            'text' => $question->text,
+            'type' => $question->type,
+        ]);
+
         /*
      * Preguntas normales.
      */
@@ -106,6 +113,12 @@ class WhatsAppFormService
                 ->orderBy('sort_order')
                 ->get();
 
+            Log::info('DEBUG OPCIONES WHATSAPP', [
+                'question_id' => $question->id,
+                'count' => $options->count(),
+                'options' => $options->pluck('text')->toArray(),
+            ]);
+
             if ($options->isEmpty()) {
                 $this->whatsAppService->sendText(
                     $conversation->contact->phone,
@@ -128,6 +141,8 @@ class WhatsAppFormService
 
                 return;
             }
+
+            Log::info('ENVIANDO LISTA WHATSAPP');
 
             $this->whatsAppService->sendList(
                 $conversation->contact->phone,
