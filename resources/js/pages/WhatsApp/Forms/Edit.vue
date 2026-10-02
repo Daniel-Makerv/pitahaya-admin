@@ -254,6 +254,20 @@ const updateQuestion = () => {
     });
 };
 
+const deleteQuestion = (question: any) => {
+    if (
+        !confirm(
+            `¿Eliminar la pregunta "${question.text}" y todas sus opciones?`,
+        )
+    ) {
+        return;
+    }
+
+    router.delete(`/whatsapp/questions/${question.id}`, {
+        preserveScroll: true,
+    });
+};
+
 const moveQuestion = (question: any, direction: 'up' | 'down') => {
     router.patch(
         `/whatsapp/forms/questions/${question.id}/move`,
@@ -510,6 +524,16 @@ const reorderQuestions = (block: any) => {
                                                     class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
                                                 >
                                                     + Opciones
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    @click="
+                                                        deleteQuestion(question)
+                                                    "
+                                                    class="text-sm font-medium text-red-600 hover:underline dark:text-red-400"
+                                                >
+                                                    Eliminar
                                                 </button>
                                             </div>
                                         </div>

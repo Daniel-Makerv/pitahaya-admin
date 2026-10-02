@@ -184,4 +184,17 @@ class WhatsAppQuestionController extends Controller
             'Pregunta actualizada correctamente.'
         );
     }
+
+
+    public function destroy(WhatsAppQuestion $question)
+    {
+        $question->options()->delete();
+
+        $question->delete();
+
+        return back()->with(
+            'success',
+            'Pregunta y opciones eliminadas correctamente.'
+        );
+    }
 }

@@ -171,6 +171,7 @@ Route::prefix('whatsapp/forms')
             [Questions\WhatsAppQuestionController::class, 'move']
         )->name('questions.move');
 
+
         Route::patch(
             '/blocks/{block}/questions/reorder',
             [Questions\WhatsAppQuestionController::class, 'reorder']
@@ -182,6 +183,11 @@ Route::put(
     '/whatsapp/questions/{question}',
     [Questions\WhatsAppQuestionController::class, 'update']
 )->name('whatsapp.questions.update');
+
+Route::delete(
+    '/whatsapp/questions/{question}',
+    [Questions\WhatsAppQuestionController::class, 'destroy']
+)->name('whatsapp.questions.destroy');
 
 // Agregar opciones a preguntas existentes
 Route::post(
