@@ -129,23 +129,12 @@ class WhatsAppFormService
                 return;
             }
 
-            /*
-         * Después agregaremos sendList()
-         * para preguntas con más de 3 opciones.
-         */
-            $message = $question->text . "\n\n";
-
-            foreach ($options as $index => $option) {
-                $message .= ($index + 1)
-                    . '. '
-                    . $option->text
-                    . "\n";
-            }
-
-            $this->whatsAppService->sendText(
+            $this->whatsAppService->sendList(
                 $conversation->contact->phone,
-                $message
+                $question->text,
+                $options->all()
             );
+
 
             return;
         }

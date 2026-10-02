@@ -102,7 +102,27 @@ class WhatsAppWebhookController extends Controller
          * Por ahora solamente procesamos texto.
          */
             $body = match ($type) {
-                'text' => data_get($message, 'text.body'),
+
+                'text' => data_get(
+                    $message,
+                    'text.body'
+                ),
+
+                'interactive' => match (data_get($message, 'interactive.type')) {
+
+                    'button_reply' => data_get(
+                        $message,
+                        'interactive.button_reply.title'
+                    ),
+
+                    'list_reply' => data_get(
+                        $message,
+                        'interactive.list_reply.title'
+                    ),
+
+                    default => null,
+                },
+
                 default => null,
             };
 
@@ -164,7 +184,11 @@ class WhatsAppWebhookController extends Controller
             ]);
 
 
-            if ($conversation->mode === 'ai' && $type === 'text') {
+            if (
+                $conversation->mode === 'ai' &&
+                in_array($type, ['text', 'interactive']) &&
+                $body !== null
+            ) {
 
                 /*
      * 1. Revisar si actualmente está

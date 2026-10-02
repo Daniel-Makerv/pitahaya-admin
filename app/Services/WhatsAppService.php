@@ -121,4 +121,77 @@ class WhatsAppService
 
         return $response->json();
     }
+
+    public function sendList(
+        string $to,
+        string $message,
+        array $options
+    ): array {
+        $phoneNumberId = config(
+            'services.whatsapp.phone_number_id'
+        );
+
+        $token = config(
+            'services.whatsapp.access_token'
+        );
+
+        $to = $this->normalizePhone($to);
+
+        $rows = collect($options)
+            ->take(10)
+            ->map(function ($option) {
+                return [
+                    'id' => 'option_' . $option->id,
+
+                    'title' => mb_substr(
+                        $option->text,
+                        0,
+                        24
+                    ),
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->post(
+                "https://graph.facebook.com/v26.0/{$phoneNumberId}/messages",
+                [
+                    'messaging_product' => 'whatsapp',
+                    'recipient_type' => 'individual',
+                    'to' => $to,
+
+                    'type' => 'interactive',
+
+                    'interactive' => [
+                        'type' => 'list',
+
+                        'body' => [
+                            'text' => $message,
+                        ],
+
+                        'action' => [
+                            'button' => 'Ver opciones',
+
+                            'sections' => [
+                                [
+                                    'title' => 'Opciones',
+                                    'rows' => $rows,
+                                ],
+                            ],
+                        ],
+                    ],
+                ]
+            );
+
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'Error enviando lista WhatsApp: '
+                    . $response->body()
+            );
+        }
+
+        return $response->json();
+    }
 }
