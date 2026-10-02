@@ -13,6 +13,7 @@ use App\Services\WhatsAppFormService;
 use App\Models\WhatsAppFormSession;
 use App\Models\WhatsAppAnswer;
 use App\Models\WhatsAppQuestion;
+
 class WhatsAppWebhookController extends Controller
 
 {
@@ -163,25 +164,60 @@ class WhatsAppWebhookController extends Controller
 
             if ($conversation->mode === 'ai' && $type === 'text') {
 
+                /*
+     * 1. Revisar si actualmente está
+     * contestando un formulario.
+     */
                 $activeSession = WhatsAppFormSession::query()
                     ->where(
                         'whatsapp_conversation_id',
                         $conversation->id
                     )
                     ->where('status', 'in_progress')
+                    ->latest()
                     ->first();
 
-                if (!$activeSession) {
+                if ($activeSession) {
 
-                    // Primer mensaje: iniciar formulario
-                    $formService->start($conversation);
-                } else {
-
-                    // Ya estamos contestando el formulario
+                    // Continúa contestando el formulario
                     $formService->answer(
                         $activeSession,
                         $body
                     );
+                } else {
+
+                    /*
+         * 2. Revisar si ya terminó
+         * anteriormente el formulario.
+         */
+                    $completedSession = WhatsAppFormSession::query()
+                        ->where(
+                            'whatsapp_conversation_id',
+                            $conversation->id
+                        )
+                        ->where('status', 'completed')
+                        ->latest()
+                        ->first();
+
+                    if ($completedSession) {
+
+                        /*
+             * Ya terminó el formulario.
+             *
+             * Más adelante aquí mandaremos
+             * el mensaje a la IA.
+             */
+                        $whatsAppService->sendText(
+                            $contact->phone,
+                            'Gracias por escribirnos 🌵 Ya tenemos tus respuestas. ¿En qué más puedo ayudarte?'
+                        );
+                    } else {
+
+                        /*
+             * Nunca ha contestado el formulario.
+             */
+                        $formService->start($conversation);
+                    }
                 }
             }
 
