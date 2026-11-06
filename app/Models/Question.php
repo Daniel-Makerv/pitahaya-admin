@@ -31,4 +31,12 @@ class Question extends Model
     {
         return $this->hasMany(QuestionOption::class, 'question_id')->orderBy('sort_order');
     }
+
+    /**
+     * Pregunta base de la que se copió (si aplica).
+     */
+    public function base(): BelongsTo
+    {
+        return $this->belongsTo(QuestionBase::class, 'question_base_id');
+    }
 }

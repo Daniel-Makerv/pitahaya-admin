@@ -110,6 +110,10 @@ require __DIR__ . '/settings.php';
 // Route::get('questions', [QuestionController::class, 'index']);
 // Route::get('questions', [QuestionController::class, 'index']);
 
+Route::post('questions/general', [QuestionController::class, 'storeGeneral'])->name('questions.general.store');
+Route::delete('questions/general/{questionBase}', [QuestionController::class, 'destroyGeneral'])->name('questions.general.destroy');
+Route::post('questions/{section}/import', [QuestionController::class, 'importQuestions'])->name('questions.import');
+
 Route::get('questions', [QuestionController::class, 'index'])->name('questions.index');
 Route::post('questions', [QuestionController::class, 'store'])->name('questions.store');
 Route::delete('questions/{section}', [QuestionController::class, 'destroy'])->name('questions.destroy');
