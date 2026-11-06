@@ -146,6 +146,13 @@ watch(search, (value) => {
               Exportar datos v2
             </button>
 
+            <button
+              class="px-3 py-1.5 text-sm rounded-lg border transition"
+              @click="exportExcelV2"
+            >
+              Formularios de whatsapp
+            </button>
+
             <div
               v-if="showDropdown"
               class="absolute right-0 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-56 dark:bg-gray-700 dark:divide-gray-600 z-50"

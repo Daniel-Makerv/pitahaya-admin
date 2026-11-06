@@ -110,7 +110,17 @@ require __DIR__ . '/settings.php';
 // Route::get('questions', [QuestionController::class, 'index']);
 // Route::get('questions', [QuestionController::class, 'index']);
 
-Route::resource('questions', QuestionController::class);
+Route::get('questions', [QuestionController::class, 'index'])->name('questions.index');
+Route::post('questions', [QuestionController::class, 'store'])->name('questions.store');
+Route::delete('questions/{section}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+Route::get('questions/{id}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
+
+Route::put('questions/{section}', [QuestionController::class, 'update'])->name('questions.update');
+
+Route::post('questions/{section}/reorder', [QuestionController::class, 'reorder'])->name('questions.reorder');
+
+Route::post('questions/{section}/questions', [QuestionController::class, 'storeQuestion'])->name('questions.store-question');
+Route::delete('questions/{section}/questions/{question}', [QuestionController::class, 'destroyQuestion'])->name('questions.destroy-question');
 
 Route::get('/privacy-policy', function () {
     return view('privacy-policy');

@@ -2,46 +2,106 @@
 import AppLayout from "@/layouts/AppLayout.vue";
 import { forms as formsRoute } from "@/routes";
 import type { BreadcrumbItem } from "@/types";
-import { Head, Link, router } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { Head, Link, router, useForm } from "@inertiajs/vue3";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 
-// Props opcionales en caso de que pases los datos desde el Controlador de Laravel
-// const props = defineProps<{ formulariosBase: any[] }>();
+interface PreguntaPrincipal {
+    id: number;
+    title: string;
+    description: string | null;
+    total_preguntas: number;
+    created_at: string | null;
+}
+
+const props = defineProps<{
+    preguntasPrincipales: PreguntaPrincipal[];
+}>();
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: "Formularios", href: formsRoute().url }];
 
+// ---------- Buscador ----------
 const searchQuery = ref("");
 
-// Mock data reactivo (reemplazar por props.formulariosBase si viene de Laravel)
-const formulariosBase = ref([
-    { id: 1, title: "Planta", description: "", total_preguntas: 12, created_at: "15/06/2026" },
-    { id: 2, title: "Alianzas productivas", description: "", total_preguntas: 8, created_at: "18/06/2026" },
-    { id: 3, title: "Canales comerciales", description: "", total_preguntas: 5, created_at: "19/06/2026" },
-    { id: 4, title: "Asesoría técnica", description: "", total_preguntas: 0, created_at: "19/06/2026" },
-    { id: 5, title: "Proceso/Congelado/Deshidratado", description: "", total_preguntas: 0, created_at: "19/06/2026" },
-    { id: 6, title: "Colaboraciones", description: "", total_preguntas: 0, created_at: "19/06/2026" },
-    { id: 7, title: "Solo Información", description: "", total_preguntas: 0, created_at: "19/06/2026" }
-]);
-
-// Buscador reactivo mediante computed
 const filteredFormularios = computed(() => {
-    return formulariosBase.value.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const q = searchQuery.value.trim().toLowerCase();
+    if (!q) return props.preguntasPrincipales;
+
+    return props.preguntasPrincipales.filter(item =>
+        item.title.toLowerCase().includes(q) ||
+        (item.description ?? "").toLowerCase().includes(q)
     );
 });
 
-const openCreateModal = () => {
-    // Tu lógica para abrir modal o redirigir a la creación
-    console.log("Abrir modal de creación");
+// ---------- Modal: crear / editar pregunta principal ----------
+const showCreateModal = ref(false);
+const editingId = ref<number | null>(null);
+const titleInput = ref<HTMLInputElement | null>(null);
+
+const form = useForm({
+    title: "",
+    description: "",
+});
+
+const openCreateModal = async () => {
+    editingId.value = null;
+    form.reset();
+    form.clearErrors();
+    showCreateModal.value = true;
+    await nextTick();
+    titleInput.value?.focus();
 };
 
-const deleteFormulario = (id: number) => {
-    if (confirm("¿Estás seguro de eliminar esta pregunta principal? Se borrarán todas las preguntas relacionadas.")) {
-        // Ejemplo de eliminación con Inertia:
-        // router.delete(route('forms.destroy', id));
-        formulariosBase.value = formulariosBase.value.filter(item => item.id !== id);
+const openEditModal = async (base: PreguntaPrincipal) => {
+    editingId.value = base.id;
+    form.clearErrors();
+    form.title = base.title;
+    form.description = base.description ?? "";
+    showCreateModal.value = true;
+    await nextTick();
+    titleInput.value?.focus();
+    titleInput.value?.select();
+};
+
+const closeCreateModal = () => {
+    if (form.processing) return;
+    showCreateModal.value = false;
+};
+
+const submitCreate = () => {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            showCreateModal.value = false;
+            editingId.value = null;
+            form.reset();
+        },
+    };
+
+    if (editingId.value) {
+        form.put(`/questions/${editingId.value}`, options);
+    } else {
+        form.post("/questions", options);
     }
+};
+
+const onKeydown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && showCreateModal.value) closeCreateModal();
+};
+
+onMounted(() => window.addEventListener("keydown", onKeydown));
+onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
+
+// ---------- Eliminar ----------
+const deletingId = ref<number | null>(null);
+
+const deleteFormulario = (id: number) => {
+    if (!confirm("¿Estás seguro de eliminar esta pregunta principal? Se borrarán todas las preguntas relacionadas.")) return;
+
+    deletingId.value = id;
+    router.delete(`/questions/${id}`, {
+        preserveScroll: true,
+        onFinish: () => (deletingId.value = null),
+    });
 };
 </script>
 
@@ -52,30 +112,35 @@ const deleteFormulario = (id: number) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex flex-1 flex-col gap-6 p-6 min-h-screen">
 
+            <!-- Encabezado -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Administración de Cuestionarios</h1>
                     <p class="text-sm text-slate-500 mt-1">Monitorea y edita las secciones principales de tus
                         cuestionarios</p>
                 </div>
-                <button @click="openCreateModal"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Nueva Pregunta Secundaria
-                </button>
-                <button @click="openCreateModal"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Nueva Pregunta Principal
-                </button>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button" disabled title="Próximamente"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-400 shadow-sm cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nueva Pregunta Secundaria
+                    </button>
+                    <button type="button" @click="openCreateModal"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nueva Pregunta Principal
+                    </button>
+                </div>
             </div>
 
+            <!-- Buscador -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="relative w-full sm:max-w-md">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -86,7 +151,7 @@ const deleteFormulario = (id: number) => {
                         </svg>
                     </span>
                     <input v-model="searchQuery" type="text" placeholder="Buscar por título o descripción..."
-                        class="w-full pl-10 pr-4 py-2  text-sm text-slate-900 placeholder-slate-400 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+                        class="w-full pl-10 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
                 </div>
                 <div class="text-xs text-slate-500 font-medium">
                     Mostrando <span class="text-slate-800 font-bold">{{ filteredFormularios.length }}</span>
@@ -94,7 +159,8 @@ const deleteFormulario = (id: number) => {
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-slate-200  shadow-sm">
+            <!-- Tabla -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
                 <table class="w-full table-auto border-collapse text-left">
                     <thead>
                         <tr
@@ -108,31 +174,39 @@ const deleteFormulario = (id: number) => {
                     </thead>
                     <tbody class="divide-y divide-slate-200 text-sm">
                         <tr v-for="base in filteredFormularios" :key="base.id"
-                            class="hover:bg-slate-50/50 transition-colors group">
+                            class="hover:bg-slate-50/50 transition-colors group"
+                            :class="{ 'opacity-50': deletingId === base.id }">
                             <td class="px-6 py-4 font-semibold text-slate-900">
                                 {{ base.title }}
                             </td>
 
-                            <td class="px-6 py-4 text-slate-500 font-normal line-clamp-2 mt-2 sm:mt-0">
-                                {{ base.description || 'Sin descripción' }}
+                            <td class="px-6 py-4 text-slate-500 font-normal">
+                                <span class="line-clamp-2">{{ base.description || 'Sin descripción' }}</span>
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <span
                                     class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                                    {{ base.total_preguntas }} ítems
+                                    {{ base.total_preguntas }} {{ base.total_preguntas === 1 ? 'ítem' : 'ítems' }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-slate-500 whitespace-nowrap">
-                                {{ base.created_at }}
+                                {{ base.created_at ?? '—' }}
                             </td>
 
-                            <!-- Acciones -->
                             <td class="px-6 py-4 text-end whitespace-nowrap">
                                 <div class="inline-flex items-center justify-end gap-3 w-full">
+                                    <button type="button" @click="openEditModal(base)"
+                                        class="text-slate-400 hover:text-blue-600 p-1 rounded transition-colors"
+                                        title="Editar pregunta">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                                        </svg>
+                                    </button>
 
-                                    <!-- Link de Inertia dinámico con el ID del cuestionario -->
                                     <Link :href="`/questions/${base.id}/edit`"
                                         class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-blue-600 hover:bg-slate-200 transition-colors">
                                         <span>Ver más</span>
@@ -142,9 +216,9 @@ const deleteFormulario = (id: number) => {
                                         </svg>
                                     </Link>
 
-                                    <!-- Botón Eliminar Rápido -->
-                                    <button @click="deleteFormulario(base.id)"
-                                        class="text-slate-400 hover:text-red-600 p-1 rounded transition-colors"
+                                    <button type="button" @click="deleteFormulario(base.id)"
+                                        :disabled="deletingId === base.id"
+                                        class="text-slate-400 hover:text-red-600 p-1 rounded transition-colors disabled:cursor-wait"
                                         title="Eliminar cuestionario">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -165,14 +239,86 @@ const deleteFormulario = (id: number) => {
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p class="text-sm font-medium">No se encontraron cuestionarios base.</p>
+                                    <p class="text-sm font-medium">
+                                        {{ searchQuery ? 'No se encontraron cuestionarios con esa búsqueda.' : 'Aún no hay preguntas principales. Crea la primera.' }}
+                                    </p>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
         </div>
+
+        <!-- Modal: Nueva Pregunta Principal -->
+        <Teleport to="body">
+            <Transition enter-active-class="transition duration-150 ease-out" enter-from-class="opacity-0"
+                enter-to-class="opacity-100" leave-active-class="transition duration-100 ease-in"
+                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" @click="closeCreateModal" />
+
+                    <div role="dialog" aria-modal="true" aria-labelledby="create-title"
+                        class="relative w-full max-w-lg rounded-xl bg-white shadow-xl ring-1 ring-slate-200">
+                        <form @submit.prevent="submitCreate">
+                            <div class="px-6 pt-6">
+                                <h2 id="create-title" class="text-lg font-semibold text-slate-900">
+                                    {{ editingId ? 'Editar pregunta principal' : 'Nueva pregunta principal' }}
+                                </h2>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    {{ editingId
+                                        ? 'El cambio se verá en todos los lugares donde aparece esta pregunta.'
+                                        : 'Se mostrará al inicio, antes de sus preguntas secundarias.' }}
+                                </p>
+                            </div>
+
+                            <div class="space-y-4 px-6 py-5">
+                                <div>
+                                    <label for="title" class="block text-sm font-medium text-slate-700">Título</label>
+                                    <input id="title" ref="titleInput" v-model="form.title" type="text"
+                                        maxlength="255" placeholder="Ej. Asesoría técnica"
+                                        class="mt-1.5 w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-1 transition-colors"
+                                        :class="form.errors.title
+                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                                            : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500'" />
+                                    <p v-if="form.errors.title" class="mt-1.5 text-xs text-red-600">{{
+                                        form.errors.title }}</p>
+                                </div>
+
+                                <div>
+                                    <label for="description" class="block text-sm font-medium text-slate-700">
+                                        Descripción <span class="font-normal text-slate-400">(opcional)</span>
+                                    </label>
+                                    <textarea id="description" v-model="form.description" rows="3" maxlength="255"
+                                        placeholder="¿Para qué sirve este cuestionario?"
+                                        class="mt-1.5 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+                                    <p v-if="form.errors.description" class="mt-1.5 text-xs text-red-600">{{
+                                        form.errors.description }}</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-center justify-end gap-3 rounded-b-xl border-t border-slate-100 bg-slate-50/60 px-6 py-4">
+                                <button type="button" @click="closeCreateModal" :disabled="form.processing"
+                                    class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" :disabled="form.processing || !form.title.trim()"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <svg v-if="form.processing" class="h-4 w-4 animate-spin" viewBox="0 0 24 24"
+                                        fill="none">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"
+                                            class="opacity-25" />
+                                        <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    {{ form.processing ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear pregunta') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </AppLayout>
 </template>
