@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\QuestionBase;
 use App\Models\QuestionSection;
 use App\Models\QuestionType;
+use App\Models\TypeForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,7 @@ class QuestionController extends Controller
                 ->map(fn(QuestionBase $q) => $this->questionPayload($q))
                 ->values(),
             'tipos'                => $this->tipos(),
+            'typeForms'            => TypeForm::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -198,6 +200,25 @@ class QuestionController extends Controller
         });
 
         return back()->with('success', 'Preguntas agregadas.');
+    }
+
+    /**
+     * Edita el texto de una pregunta secundaria (tipo y opciones no cambian).
+     */
+    public function updateQuestion(Request $request, QuestionSection $section, Question $question)
+    {
+        abort_unless((int) $question->question_section_id === (int) $section->id, 404);
+
+        $data = $request->validate([
+            'text' => ['required', 'string', 'max:1000'],
+        ], [
+            'text.required' => 'Escribe el texto de la pregunta.',
+            'text.max'      => 'La pregunta no puede pasar de 1000 caracteres.',
+        ]);
+
+        $question->update(['text' => trim($data['text'])]);
+
+        return back()->with('success', 'Pregunta actualizada.');
     }
 
     /**

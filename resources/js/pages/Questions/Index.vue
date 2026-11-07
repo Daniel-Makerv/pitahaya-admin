@@ -4,7 +4,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { forms as formsRoute } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 
 interface PreguntaPrincipal {
     id: number;
@@ -27,10 +34,16 @@ interface Tipo {
     str: string | null;
 }
 
+interface TypeForm {
+    id: number;
+    name: string;
+}
+
 const props = defineProps<{
     preguntasPrincipales: PreguntaPrincipal[];
     preguntasGenerales: PreguntaGeneral[];
     tipos: Tipo[];
+    typeForms: TypeForm[];
 }>();
 
 // ---------- Preguntas generales ----------
@@ -80,8 +93,44 @@ const form = useForm({
     description: '',
 });
 
+// ---------- Select de type_forms existentes ----------
+// "" = escribir un nombre nuevo
+const selectedTypeFormId = ref<number | ''>('');
+
+const onTypeFormChange = async () => {
+    const typeForm = props.typeForms.find(
+        (t) => t.id === selectedTypeFormId.value,
+    );
+    if (typeForm) {
+        form.title = typeForm.name;
+        return;
+    }
+    // Eligió "Escribir un nombre nuevo"
+    form.title = '';
+    await nextTick();
+    titleInput.value?.focus();
+};
+
+// Si escriben otro texto a mano, el select vuelve a "nuevo"
+watch(
+    () => form.title,
+    (title) => {
+        const typeForm = props.typeForms.find(
+            (t) => t.id === selectedTypeFormId.value,
+        );
+        if (typeForm && typeForm.name !== title) selectedTypeFormId.value = '';
+    },
+);
+
+// Al editar, preselecciona el type_form que tenga el mismo nombre
+const matchTypeForm = (title: string) =>
+    props.typeForms.find(
+        (t) => t.name.trim().toLowerCase() === title.trim().toLowerCase(),
+    )?.id ?? '';
+
 const openCreateModal = async () => {
     editingId.value = null;
+    selectedTypeFormId.value = '';
     form.reset();
     form.clearErrors();
     showCreateModal.value = true;
@@ -94,6 +143,7 @@ const openEditModal = async (base: PreguntaPrincipal) => {
     form.clearErrors();
     form.title = base.title;
     form.description = base.description ?? '';
+    selectedTypeFormId.value = matchTypeForm(base.title);
     showCreateModal.value = true;
     await nextTick();
     titleInput.value?.focus();
@@ -596,6 +646,38 @@ const deleteFormulario = (id: number) => {
 
                             <div class="space-y-4 px-6 py-5">
                                 <div>
+                                    <label
+                                        for="type_form"
+                                        class="block text-sm font-medium text-slate-700"
+                                    >
+                                        Usar uno existente
+                                        <span class="font-normal text-slate-400"
+                                            >(opcional)</span
+                                        >
+                                    </label>
+                                    <select
+                                        id="type_form"
+                                        v-model="selectedTypeFormId"
+                                        @change="onTypeFormChange"
+                                        :disabled="!typeForms.length"
+                                        class="mt-1.5 mb-4 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                                    >
+                                        <option value="">
+                                            {{
+                                                typeForms.length
+                                                    ? 'Escribir un nombre nuevo'
+                                                    : 'No hay formularios registrados'
+                                            }}
+                                        </option>
+                                        <option
+                                            v-for="typeForm in typeForms"
+                                            :key="typeForm.id"
+                                            :value="typeForm.id"
+                                        >
+                                            {{ typeForm.name }}
+                                        </option>
+                                    </select>
+
                                     <label
                                         for="title"
                                         class="block text-sm font-medium text-slate-700"

@@ -120,7 +120,7 @@ Route::delete('questions/{section}', [QuestionController::class, 'destroy'])->na
 Route::get('questions/{id}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
 
 Route::put('questions/{section}', [QuestionController::class, 'update'])->name('questions.update');
-
+Route::put('questions/{section}/questions/{question}', [QuestionController::class, 'updateQuestion'])->name('questions.update-question');
 Route::post('questions/{section}/reorder', [QuestionController::class, 'reorder'])->name('questions.reorder');
 
 Route::post('questions/{section}/questions', [QuestionController::class, 'storeQuestion'])->name('questions.store-question');
