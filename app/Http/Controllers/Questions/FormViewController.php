@@ -19,11 +19,11 @@ class FormViewController extends Controller
     private const META_KEYS = ['id', 'fecha', 'send_api'];
 
     /**
-     * GET /forms/{form}/view
+     * GET /forms/{form}/views
      */
     public function show(Form $form)
     {
-        return Inertia::render('Forms/Show', [
+        return Inertia::render('Questions/Show', [
             'registro' => $this->payload($form),
         ]);
     }
