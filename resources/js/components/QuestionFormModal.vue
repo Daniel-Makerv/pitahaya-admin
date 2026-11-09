@@ -40,6 +40,7 @@ const form = useForm({
     text: '',
     question_type_id: '' as number | '',
     options: ['', ''] as string[],
+    required: true,
 });
 
 // Selección única / múltiple (str = select) necesitan opciones
@@ -231,6 +232,55 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
                                     class="mt-1.5 text-xs text-red-600"
                                 >
                                     {{ form.errors.question_type_id }}
+                                </p>
+                            </div>
+
+                            <!-- Obligatoria / Opcional -->
+                            <div>
+                                <span
+                                    class="block text-sm font-medium text-slate-700"
+                                    >¿Es obligatoria?</span
+                                >
+                                <div
+                                    role="radiogroup"
+                                    aria-label="¿Es obligatoria?"
+                                    class="mt-1.5 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1"
+                                >
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        :aria-checked="form.required"
+                                        @click="form.required = true"
+                                        class="rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+                                        :class="
+                                            form.required
+                                                ? 'bg-white text-slate-900 shadow-sm'
+                                                : 'text-slate-500 hover:text-slate-700'
+                                        "
+                                    >
+                                        Obligatoria
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        :aria-checked="!form.required"
+                                        @click="form.required = false"
+                                        class="rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+                                        :class="
+                                            !form.required
+                                                ? 'bg-white text-slate-900 shadow-sm'
+                                                : 'text-slate-500 hover:text-slate-700'
+                                        "
+                                    >
+                                        Opcional
+                                    </button>
+                                </div>
+                                <p class="mt-1.5 text-xs text-slate-400">
+                                    {{
+                                        form.required
+                                            ? 'No se puede avanzar sin contestarla.'
+                                            : 'Se podrá saltar con «Omitir».'
+                                    }}
                                 </p>
                             </div>
 

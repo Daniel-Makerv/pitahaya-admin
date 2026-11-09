@@ -137,6 +137,7 @@ class QuestionController extends Controller
                 'question_section_id' => $section->id,
                 'question_type_id'    => $data['question_type_id'],
                 'text'                => $data['text'],
+                'required'            => $data['required'],
                 'sort_order'          => $this->nextOrder($section->id),
             ]);
 
@@ -187,6 +188,7 @@ class QuestionController extends Controller
                     'question_type_id'    => $base->question_type_id,
                     'question_base_id'    => $base->id,
                     'text'                => $base->text,
+                    'required'            => $base->required,
                     'sort_order'          => ++$order,
                 ]);
 
@@ -203,7 +205,7 @@ class QuestionController extends Controller
     }
 
     /**
-     * Edita el texto de una pregunta secundaria (tipo y opciones no cambian).
+     * Edita el texto y si es obligatoria una pregunta secundaria (tipo y opciones no cambian).
      */
     public function updateQuestion(Request $request, QuestionSection $section, Question $question)
     {
@@ -211,12 +213,16 @@ class QuestionController extends Controller
 
         $data = $request->validate([
             'text' => ['required', 'string', 'max:1000'],
+            'required' => ['required', 'boolean'],
         ], [
             'text.required' => 'Escribe el texto de la pregunta.',
             'text.max'      => 'La pregunta no puede pasar de 1000 caracteres.',
         ]);
 
-        $question->update(['text' => trim($data['text'])]);
+        $question->update([
+            'text'     => trim($data['text']),
+            'required' => (bool) $data['required'],
+        ]);
 
         return back()->with('success', 'Pregunta actualizada.');
     }
@@ -278,6 +284,7 @@ class QuestionController extends Controller
             $base = QuestionBase::create([
                 'question_type_id' => $data['question_type_id'],
                 'text'             => $data['text'],
+                'required'         => $data['required'],
             ]);
 
             $this->createOptions($base, $data);
@@ -312,6 +319,7 @@ class QuestionController extends Controller
         return [
             'id'      => $q->id,
             'text'    => $q->text,
+            'required' => (bool) $q->required,
             'type'    => $q->type?->name,
             'order'   => $q->sort_order ?? null,
             'options' => $q->options->pluck('text')->values(),
@@ -354,6 +362,7 @@ class QuestionController extends Controller
         $data = $request->validate([
             'text'             => ['required', 'string', 'max:1000'],
             'question_type_id' => ['required', 'integer', 'exists:question_types,id'],
+            'required'         => ['sometimes', 'boolean'],
             'options'          => $requiresOptions ? ['required', 'array', 'min:2'] : ['nullable', 'array'],
             'options.*'        => ['required', 'string', 'max:255', 'distinct:ignore_case'],
         ], [
@@ -369,6 +378,7 @@ class QuestionController extends Controller
         ]);
 
         $data['requires_options'] = $requiresOptions;
+        $data['required'] = (bool) ($data['required'] ?? true);
 
         return $data;
     }

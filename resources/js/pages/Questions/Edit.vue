@@ -5,7 +5,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { forms as formsRoute } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 import Draggable from 'vuedraggable';
 
 interface FormularioBase {
@@ -17,6 +24,7 @@ interface FormularioBase {
 interface Question {
     id: number;
     text: string;
+    required: boolean;
     type: string | null;
     order: number;
     options: string[];
@@ -102,12 +110,14 @@ const editInput = ref<HTMLTextAreaElement | null>(null);
 
 const editForm = useForm({
     text: '',
+    required: true,
 });
 
 const openEditModal = async (question: Question) => {
     editingQuestion.value = question;
     editForm.clearErrors();
     editForm.text = question.text;
+    editForm.required = question.required;
     await nextTick();
     editInput.value?.focus();
     editInput.value?.select();
@@ -122,7 +132,8 @@ const canSaveEdit = computed(
     () =>
         !editForm.processing &&
         editForm.text.trim() !== '' &&
-        editForm.text.trim() !== editingQuestion.value?.text,
+        (editForm.text.trim() !== editingQuestion.value?.text ||
+            editForm.required !== editingQuestion.value?.required),
 );
 
 const submitEdit = () => {
@@ -380,6 +391,11 @@ const handleDragEnd = () => {
                                     <td class="px-6 py-3.5">
                                         <p class="font-medium text-slate-900">
                                             {{ element.text }}
+                                            <span
+                                                v-if="!element.required"
+                                                class="ml-1.5 inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 align-middle text-[11px] font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset"
+                                                >Opcional</span
+                                            >
                                         </p>
                                         <div
                                             v-if="element.options?.length"
@@ -542,8 +558,8 @@ const handleDragEnd = () => {
                                     Editar pregunta
                                 </h2>
                                 <p class="mt-1 text-sm text-slate-500">
-                                    Solo cambia el texto. El tipo y las opciones
-                                    se conservan.
+                                    Cambia el texto o si es obligatoria. El tipo
+                                    y las opciones se conservan.
                                 </p>
                             </div>
 
@@ -573,6 +589,45 @@ const handleDragEnd = () => {
                                 >
                                     {{ editForm.errors.text }}
                                 </p>
+
+                                <span
+                                    class="mt-4 block text-sm font-medium text-slate-700"
+                                    >¿Es obligatoria?</span
+                                >
+                                <div
+                                    role="radiogroup"
+                                    aria-label="¿Es obligatoria?"
+                                    class="mt-1.5 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1"
+                                >
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        :aria-checked="editForm.required"
+                                        @click="editForm.required = true"
+                                        class="rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+                                        :class="
+                                            editForm.required
+                                                ? 'bg-white text-slate-900 shadow-sm'
+                                                : 'text-slate-500 hover:text-slate-700'
+                                        "
+                                    >
+                                        Obligatoria
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        :aria-checked="!editForm.required"
+                                        @click="editForm.required = false"
+                                        class="rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+                                        :class="
+                                            !editForm.required
+                                                ? 'bg-white text-slate-900 shadow-sm'
+                                                : 'text-slate-500 hover:text-slate-700'
+                                        "
+                                    >
+                                        Opcional
+                                    </button>
+                                </div>
                             </div>
 
                             <div

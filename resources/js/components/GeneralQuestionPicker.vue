@@ -12,6 +12,7 @@ import {
 interface PreguntaGeneral {
     id: number;
     text: string;
+    required: boolean;
     type: string | null;
     options: string[];
     added: boolean;
@@ -238,6 +239,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
                                                     pregunta.type || 'Sin tipo'
                                                 }}
                                             </span>
+                                            <span
+                                                v-if="!pregunta.required"
+                                                class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset"
+                                                >Opcional</span
+                                            >
                                             <span
                                                 v-for="option in pregunta.options"
                                                 :key="option"

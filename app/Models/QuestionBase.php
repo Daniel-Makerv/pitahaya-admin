@@ -17,6 +17,11 @@ class QuestionBase extends Model
     protected $fillable = [
         'question_type_id',
         'text',
+        'required',
+    ];
+
+    protected $casts = [
+        'required' => 'boolean',
     ];
 
     public function type(): BelongsTo

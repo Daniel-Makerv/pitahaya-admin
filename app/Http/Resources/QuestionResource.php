@@ -18,6 +18,7 @@ class QuestionResource extends JsonResource
             'id'    => $this->id,
             'order' => $this->sort_order,
             'text'  => $this->text,
+            'required' => (bool) ($this->required ?? true),
             'type'  => $this->whenLoaded('type', fn () => $this->type ? [
                 'id'   => $this->type->id,
                 'name' => $this->type->name,

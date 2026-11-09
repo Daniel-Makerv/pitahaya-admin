@@ -24,6 +24,7 @@ interface PreguntaPrincipal {
 interface PreguntaGeneral {
     id: number;
     text: string;
+    required: boolean;
     type: string | null;
     options: string[];
 }
@@ -353,8 +354,8 @@ const deleteFormulario = (id: number) => {
                                     {{ base.total_preguntas }}
                                     {{
                                         base.total_preguntas === 1
-                                            ? 'Pregunta'
-                                            : 'Preguntas'
+                                            ? 'ítem'
+                                            : 'ítems'
                                     }}
                                 </span>
                             </td>
@@ -538,11 +539,20 @@ const deleteFormulario = (id: number) => {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                                    <div
+                                        class="flex flex-wrap items-center gap-1.5"
                                     >
-                                        {{ pregunta.type || 'Sin tipo' }}
-                                    </span>
+                                        <span
+                                            class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                                        >
+                                            {{ pregunta.type || 'Sin tipo' }}
+                                        </span>
+                                        <span
+                                            v-if="!pregunta.required"
+                                            class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset"
+                                            >Opcional</span
+                                        >
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-end">
                                     <button

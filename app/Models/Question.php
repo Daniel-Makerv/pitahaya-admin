@@ -13,8 +13,14 @@ class Question extends Model
     protected $fillable = [
         'question_section_id',
         'question_type_id',
+        'question_base_id',
         'text',
+        'required',
         'sort_order',
+    ];
+
+    protected $casts = [
+        'required' => 'boolean',
     ];
 
     public function section(): BelongsTo
