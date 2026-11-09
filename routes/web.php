@@ -11,6 +11,7 @@ use App\Exports\FormsExportV2Template;
 use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
 use App\Http\Controllers\{Questions};
+use App\Http\Controllers\FormViewController;
 
 
 Route::get('/', function () {
@@ -20,6 +21,14 @@ Route::get('/', function () {
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('forms/{form}/view', [Questions\FormViewController::class, 'show'])->whereNumber('form')->name('forms.view');
+    Route::get('forms/{form}/pdf', [Questions\FormViewController::class, 'pdf'])->whereNumber('form')->name('forms.pdf');
+});
+Route::delete('forms/{form}', [Questions\FormViewController::class, 'destroy'])->whereNumber('form')->name('forms.destroy');
 
 Route::get('forms', function (Request $request) {
     $search = $request->input('search');

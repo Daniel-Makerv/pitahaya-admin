@@ -353,8 +353,8 @@ const deleteFormulario = (id: number) => {
                                     {{ base.total_preguntas }}
                                     {{
                                         base.total_preguntas === 1
-                                            ? 'ítem'
-                                            : 'ítems'
+                                            ? 'Pregunta'
+                                            : 'Preguntas'
                                     }}
                                 </span>
                             </td>
