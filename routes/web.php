@@ -12,7 +12,8 @@ use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
 use App\Http\Controllers\{Questions};
 use App\Http\Controllers\FormViewController;
-
+use App\Support\FormFilters;
+use Illuminate\Support\Str;
 
 Route::get('/', function () {
     return redirect('dashboard');
@@ -34,40 +35,37 @@ Route::get('forms', function (Request $request) {
     $search = $request->input('search');
     $typeId = $request->input('type_form_id');
 
-    $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
-        ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
+    // Por default: del día de hoy hace un año a hoy
+    ['from' => $from, 'to' => $to, 'range' => $range] = FormFilters::dates($request);
 
-    // 🧭 Filtro por tipo de formulario
-    if ($typeId) {
-        $formsQuery->where('forms.type_form_id', $typeId);
-    }
-    // 👇 Filtro por búsqueda
-    if ($search) {
-        $formsQuery->where(function ($q) use ($search) {
-            $q->where('forms.name', 'like', "%{$search}%")
-                ->orWhere('forms.form->phone_contact', 'like', "%{$search}%") // 👈 busca dentro del JSON
-                ->orWhere('type_forms.name', 'like', "%{$search}%"); // área de interés
-        });
-    }
+    $formsQuery = Form::leftJoin('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
+        ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str')
+        ->orderByDesc('forms.id');
 
-    $forms = $formsQuery->paginate(12)->withQueryString(); // <- mantiene search en los links
+    FormFilters::apply($formsQuery, $search, $typeId, $from, $to);
 
-    $counts = TypeForm::get()->map(function ($typeForm) {
-        $total = Form::whereTypeFormId($typeForm->id)->count();
+    $forms = $formsQuery->paginate(12)->withQueryString(); // mantiene los filtros en la paginación
+
+    // Contadores por área: respetan búsqueda y rango de fechas (no el área seleccionada)
+    $counts = TypeForm::orderBy('name')->get()->map(function ($typeForm) use ($search, $from, $to) {
+        $query = Form::leftJoin('type_forms', 'forms.type_form_id', '=', 'type_forms.id');
 
         return [
-            'id' => $typeForm->id,
-            'name' => $typeForm->name,
-            'total' => $total,
+            'id'    => $typeForm->id,
+            'name'  => $typeForm->name,
+            'total' => FormFilters::apply($query, $search, $typeForm->id, $from, $to)->count(),
         ];
     });
 
     return Inertia::render('Forms', [
-        'forms' => $forms,
-        'counts' => $counts,
-        // 👇 Para rellenar el input en el front
+        'forms'   => $forms,
+        'counts'  => $counts,
         'filters' => [
-            'search' => $search,
+            'search'       => $search,
+            'type_form_id' => $typeId ? (int) $typeId : null,
+            'from'         => $from,
+            'to'           => $to,
+            'range'        => $range,
         ],
     ]);
 })->middleware(['auth', 'verified'])->name('forms');
@@ -76,33 +74,34 @@ Route::get('/forms/export', function (Request $request) {
     $search = $request->input('search');
     $typeId = $request->input('type_form_id');
 
+    // Mismo default que la lista: último año
+    ['from' => $from, 'to' => $to] = FormFilters::dates($request);
 
-    if ($typeId == null || $typeId == "") {
-        return Excel::download(new FormsMultiSheetExport($search), 'formularios_completos.xlsx');
+    // Nombre del archivo con el rango: formularios_completos_2026-11-01_a_2026-11-12.xlsx
+    [$start, $end] = FormFilters::range($from, $to);
+    $period = match (true) {
+        $start && $end => $start->format('Y-m-d') . '_a_' . $end->format('Y-m-d'),
+        (bool) $start  => 'desde_' . $start->format('Y-m-d'),
+        (bool) $end    => 'hasta_' . $end->format('Y-m-d'),
+        default        => 'todo_' . now()->format('Y-m-d'),
+    };
+
+    // "Todos": una hoja por área de interés
+    if (! $typeId) {
+        return Excel::download(
+            new FormsMultiSheetExport($search, $from, $to),
+            "formularios_completos_{$period}.xlsx"
+        );
     }
 
+    $typeName = TypeForm::whereKey($typeId)->value('name') ?? 'formularios';
+    $forms = FormsExport::query($search, $typeId, $from, $to)->get();
 
-    $formsQuery = Form::join('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
-        ->select('forms.*', 'type_forms.name as type', 'type_forms.str as str');
-
-    if ($search) {
-        $formsQuery->where(function ($q) use ($search) {
-            $q->where('forms.name', 'like', "%{$search}%")
-                ->orWhere('type_forms.name', 'like', "%{$search}%")
-                ->orWhere('forms.form->phone_contact', 'like', "%{$search}%");
-        });
-    }
-
-    if ($typeId) {
-        $formsQuery->where('forms.type_form_id', $typeId);
-    }
-
-    $forms = $formsQuery->get();
-
-    // 🔹 Si usas maatwebsite/excel
-    return Excel::download(new FormsExport($forms, $typeId), 'formularios.xlsx');
-})->name('forms.export');
-
+    return Excel::download(
+        new FormsExport($forms, $typeId),
+        'formularios_' . Str::slug($typeName) . '_' . $period . '.xlsx'
+    );
+})->middleware(['auth', 'verified'])->name('forms.export');
 
 Route::get('/forms/export-v2', function (Request $request) {
 

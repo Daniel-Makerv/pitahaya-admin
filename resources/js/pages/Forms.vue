@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { forms as formsRoute } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 // 👇 eliminar registro
 const deletingId = ref<number | null>(null);
@@ -37,63 +37,123 @@ const props = defineProps<{
     };
     counts: number;
     filters?: {
-        search?: string;
+        search?: string | null;
+        type_form_id?: number | null;
+        from?: string | null;
+        to?: string | null;
+        range?: string | null;
     };
 }>();
 
 // 👇 estado local del buscador
 const search = ref(props.filters?.search ?? '');
-const typeFilter = ref(props.filters?.type_form_id ?? null);
+const typeFilter = ref<number | null>(props.filters?.type_form_id ?? null);
+// El servidor manda el rango por default (último año) o el que se eligió
+const dateFrom = ref(props.filters?.from ?? '');
+const dateTo = ref(props.filters?.to ?? '');
+const showAll = ref(props.filters?.range === 'all');
+
+watch(
+    () => props.filters,
+    (filters) => {
+        dateFrom.value = filters?.from ?? '';
+        dateTo.value = filters?.to ?? '';
+        showAll.value = filters?.range === 'all';
+    },
+);
+
+// Todos los filtros juntos (lista y exportables usan los mismos)
+const currentFilters = () => {
+    const filters: Record<string, string | number> = {};
+    if (search.value) filters.search = search.value;
+    if (typeFilter.value) filters.type_form_id = typeFilter.value;
+    if (showAll.value) {
+        filters.range = 'all';
+    } else {
+        if (dateFrom.value) filters.from = dateFrom.value;
+        if (dateTo.value) filters.to = dateTo.value;
+    }
+    return filters;
+};
+
+// Al mover una fecha a mano deja de ser "Todo"
+const onDateChange = () => {
+    showAll.value = false;
+    applyFilters();
+};
+
+const applyFilters = () => {
+    router.get(formsRoute().url, currentFilters(), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+};
+
+const hasDateRange = computed(
+    () => !showAll.value && (!!dateFrom.value || !!dateTo.value),
+);
+
+const showAllDates = () => {
+    showAll.value = true;
+    dateFrom.value = '';
+    dateTo.value = '';
+    applyFilters();
+};
+
+// Atajos de rango
+const toInputDate = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const setRange = (preset: 'today' | '7d' | 'month' | 'year') => {
+    const today = new Date();
+    const start = new Date(today);
+    if (preset === '7d') start.setDate(today.getDate() - 6);
+    if (preset === 'month') start.setDate(1);
+    if (preset === 'year') start.setFullYear(today.getFullYear() - 1);
+    showAll.value = false;
+    dateFrom.value = toInputDate(start);
+    dateTo.value = toInputDate(today);
+    applyFilters();
+};
+
+// Exportables: mismos filtros de búsqueda y fechas; el área la elige el menú
+const exportParams = (typeId: number | null) => {
+    const params = new URLSearchParams();
+    if (search.value) params.append('search', search.value);
+    if (showAll.value) {
+        params.append('range', 'all');
+    } else {
+        if (dateFrom.value) params.append('from', dateFrom.value);
+        if (dateTo.value) params.append('to', dateTo.value);
+    }
+    if (typeId) params.append('type_form_id', typeId.toString());
+    return params.toString();
+};
 
 const exportExcel = (typeId: number | null) => {
-    const params = new URLSearchParams({
-        search: search.value || '',
-    });
+    showDropdown.value = false;
 
-    if (typeId) params.append('type_form_id', typeId.toString());
-
-    // 👇 Abre la descarga directamente
-    window.open(`/forms/export?${params.toString()}`, '_blank');
+    // 👇 Abre la descarga directamente (con búsqueda y rango de fechas)
+    window.open(`/forms/export?${exportParams(typeId)}`, '_blank');
 };
 
 const filterByType = (typeId: number | null) => {
     typeFilter.value = typeId; // ✅ cambia el estado local inmediatamente
-
-    router.get(
-        formsRoute().url,
-        {
-            search: search.value,
-            type_form_id: typeId,
-        },
-        {
-            preserveState: true,
-            replace: true,
-        },
-    );
+    applyFilters();
 };
 
 const exportExcelV2 = () => {
-    const params = new URLSearchParams({
-        search: search.value || '',
-    });
-
-    if (typeFilter.value) {
-        params.append('type_form_id', typeFilter.value.toString());
-    }
-
-    window.location.href = `/forms/export-v2?${params.toString()}`;
+    window.location.href = `/forms/export-v2?${exportParams(typeFilter.value)}`;
 };
 
-// 👇 cada vez que cambia el input, mandamos la búsqueda
-watch(search, (value) => {
-    router.get(
-        formsRoute().url,
-        { search: value },
-        {
-            preserveState: true,
-            replace: true,
-        },
-    );
+// 👇 cada vez que cambia el input, mandamos la búsqueda (sin perder área ni fechas)
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+watch(search, () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 350);
 });
 </script>
 
@@ -184,6 +244,13 @@ watch(search, (value) => {
                             v-if="showDropdown"
                             class="absolute right-0 z-50 mt-2 w-56 divide-y divide-gray-100 rounded-lg bg-white shadow-sm dark:divide-gray-600 dark:bg-gray-700"
                         >
+                            <p class="px-4 py-2 text-xs text-gray-500">
+                                <template v-if="hasDateRange">
+                                    Del {{ dateFrom || 'inicio' }} al
+                                    {{ dateTo || 'hoy' }}
+                                </template>
+                                <template v-else>Todas las fechas</template>
+                            </p>
                             <ul
                                 class="py-1 text-sm text-gray-700 dark:text-gray-200"
                             >
@@ -212,6 +279,82 @@ watch(search, (value) => {
                                     </button>
                                 </li>
                             </ul>
+                        </div>
+                    </div>
+
+                    <!-- Rango de fechas -->
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label
+                                for="date-from"
+                                class="mb-1 block text-xs font-medium text-gray-500"
+                                >Desde</label
+                            >
+                            <input
+                                id="date-from"
+                                v-model="dateFrom"
+                                type="date"
+                                :max="dateTo || undefined"
+                                @change="onDateChange"
+                                class="rounded-lg border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="date-to"
+                                class="mb-1 block text-xs font-medium text-gray-500"
+                                >Hasta</label
+                            >
+                            <input
+                                id="date-to"
+                                v-model="dateTo"
+                                type="date"
+                                :min="dateFrom || undefined"
+                                @change="onDateChange"
+                                class="rounded-lg border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div class="flex gap-1">
+                            <button
+                                type="button"
+                                class="rounded-lg border px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100"
+                                @click="setRange('today')"
+                            >
+                                Hoy
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-lg border px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100"
+                                @click="setRange('7d')"
+                            >
+                                7 días
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-lg border px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100"
+                                @click="setRange('month')"
+                            >
+                                Este mes
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-lg border px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100"
+                                @click="setRange('year')"
+                            >
+                                Último año
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-lg border px-2.5 py-1.5 text-xs transition"
+                                :class="
+                                    showAll
+                                        ? 'border-blue-600 bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                "
+                                @click="showAllDates"
+                            >
+                                Todo
+                            </button>
                         </div>
                     </div>
 
