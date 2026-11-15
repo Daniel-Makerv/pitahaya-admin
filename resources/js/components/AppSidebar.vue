@@ -19,6 +19,7 @@ import {
     BookOpenCheck,
     LayoutGrid,
     MessageCircle,
+    Ticket,
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
@@ -43,7 +44,7 @@ const mainNavItems: NavItem[] = [
         icon: MessageCircle,
     },
 
-    { title: 'Rifas', href: '/raffles', icon: MessageCircle }, // import { Ticket } from 'lucide-vue-next'
+    { title: 'Rifas', href: '/raffles', icon: Ticket }, // import { Ticket } from 'lucide-vue-next'
 ];
 
 const footerNavItems: NavItem[] = [];
