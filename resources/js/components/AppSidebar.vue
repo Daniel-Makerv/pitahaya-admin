@@ -11,12 +11,15 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { forms } from '@/routes';
-import { questions } from '@/routes';
+import { dashboard, forms } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, BookOpenCheck, Book,  MessageCircle } from 'lucide-vue-next';
+import {
+    Book,
+    BookOpenCheck,
+    LayoutGrid,
+    MessageCircle,
+} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
@@ -31,7 +34,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Preguntas',
-         href: '/questions',
+        href: '/questions',
         icon: BookOpenCheck,
     },
     {
@@ -39,11 +42,11 @@ const mainNavItems: NavItem[] = [
         href: '/whatsapp/forms',
         icon: MessageCircle,
     },
+
+    { title: 'Rifas', href: '/raffles', icon: MessageCircle }, // import { Ticket } from 'lucide-vue-next'
 ];
 
-const footerNavItems: NavItem[] = [
-
-];
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>

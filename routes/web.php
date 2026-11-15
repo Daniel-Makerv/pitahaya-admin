@@ -10,7 +10,7 @@ use App\Exports\FormsExport;
 use App\Exports\FormsExportV2Template;
 use App\Exports\FormsMultiSheetExport;
 use App\Http\Controllers\Questions\QuestionController;
-use App\Http\Controllers\{Questions};
+use App\Http\Controllers\{Questions, RaffleController, RaffleInvitationController};
 use App\Http\Controllers\FormViewController;
 use App\Support\FormFilters;
 use Illuminate\Support\Str;
@@ -229,3 +229,34 @@ Route::delete(
     '/whatsapp/blocks/{block}',
     [Questions\WhatsAppFormController::class, 'destroyBlock']
 )->name('whatsapp.blocks.destroy');
+
+
+/* ---------- Admin de rifas (requiere sesión) ---------- */
+Route::middleware(['auth'])->group(function () {
+    Route::get('raffles', [RaffleController::class, 'index'])->name('raffles.index');
+    Route::post('raffles', [RaffleController::class, 'store'])->name('raffles.store');
+    Route::get('raffles/{raffle}', [RaffleController::class, 'show'])->whereNumber('raffle')->name('raffles.show');
+    Route::put('raffles/{raffle}', [RaffleController::class, 'update'])->whereNumber('raffle')->name('raffles.update');
+    Route::delete('raffles/{raffle}', [RaffleController::class, 'destroy'])->whereNumber('raffle')->name('raffles.destroy');
+
+    // Invitaciones
+    Route::get('raffles/{raffle}/candidates', [RaffleController::class, 'candidates'])->name('raffles.candidates');
+    Route::post('raffles/{raffle}/invite', [RaffleController::class, 'invite'])->name('raffles.invite');
+    Route::post('raffles/{raffle}/participants/{participant}/resend', [RaffleController::class, 'resend'])->name('raffles.resend');
+    Route::delete('raffles/{raffle}/participants/{participant}', [RaffleController::class, 'removeParticipant'])->name('raffles.participants.destroy');
+
+    // Sorteo
+    Route::post('raffles/{raffle}/draw', [RaffleController::class, 'draw'])->name('raffles.draw');
+});
+
+/* ---------- Página pública de la invitación (sin sesión) ---------- */
+Route::get('rifa/invitacion/{token}', [RaffleInvitationController::class, 'show'])
+    ->name('raffles.invitation.show');
+
+Route::post('rifa/invitacion/{token}/progreso', [RaffleInvitationController::class, 'progress'])
+    ->middleware('throttle:60,1')
+    ->name('raffles.invitation.progress');
+
+Route::post('rifa/invitacion/{token}', [RaffleInvitationController::class, 'confirm'])
+    ->middleware('throttle:10,1')
+    ->name('raffles.invitation.confirm');
