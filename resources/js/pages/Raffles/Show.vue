@@ -33,12 +33,14 @@ interface Raffle {
     target_number: string | null;
     drawn_at: string | null;
     winners: Winner[];
+    public_url: string | null;
 }
 
 interface Participant {
     id: number;
     name: string;
-    email: string;
+    email: string | null;
+    source: 'form' | 'manual' | 'open';
     status: 'invited' | 'confirmed';
     number: string | null;
     place: number | null;
@@ -57,6 +59,34 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+// ---------- Link público (registro sin correo) ----------
+const copied = ref(false);
+const copyPublicUrl = async () => {
+    if (!props.raffle.public_url) return;
+    try {
+        await navigator.clipboard.writeText(props.raffle.public_url);
+    } catch {
+        const input = document.getElementById(
+            'public-url',
+        ) as HTMLInputElement | null;
+        input?.select();
+        document.execCommand('copy');
+    }
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+};
+
+const shareWhatsApp = computed(() =>
+    props.raffle.public_url
+        ? `https://wa.me/?text=${encodeURIComponent(`Regístrese y participe en la rifa de PITAMEX: ${props.raffle.public_url}`)}`
+        : '#',
+);
+
+const sourceLabel = (source: Participant['source']) =>
+    ({ form: null, manual: 'Agregado a mano', open: 'Registro por link' })[
+        source
+    ] ?? null;
+
 const flashSuccess = computed(
     () => (page.props as any).flash?.success as string | undefined,
 );
@@ -103,7 +133,7 @@ const visible = computed(() => {
     return base.filter(
         (p) =>
             p.name.toLowerCase().includes(q) ||
-            p.email.toLowerCase().includes(q) ||
+            (p.email ?? '').toLowerCase().includes(q) ||
             (p.number ?? '').includes(q),
     );
 });
@@ -411,6 +441,64 @@ const placeLabel = (place: number) =>
                 </div>
             </div>
 
+            <!-- Link público: registro sin correo -->
+            <div
+                v-if="isOpen && raffle.public_url"
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div
+                    class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+                >
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-slate-900">
+                            Registro sin invitación
+                        </p>
+                        <p class="mt-0.5 text-xs text-slate-500">
+                            Para quien no tiene correo o no está en los
+                            formularios. Compártelo por WhatsApp o ábrelo en la
+                            tablet del stand: llenan el mismo registro y reciben
+                            su número al terminar. El correo es opcional.
+                        </p>
+                    </div>
+                    <div
+                        class="flex w-full shrink-0 flex-col gap-2 sm:flex-row lg:w-auto"
+                    >
+                        <input
+                            id="public-url"
+                            :value="raffle.public_url"
+                            readonly
+                            @focus="
+                                ($event.target as HTMLInputElement).select()
+                            "
+                            class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-700 sm:w-72"
+                        />
+                        <button
+                            type="button"
+                            @click="copyPublicUrl"
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                        >
+                            {{ copied ? '¡Copiado!' : 'Copiar' }}
+                        </button>
+                        <a
+                            :href="shareWhatsApp"
+                            target="_blank"
+                            rel="noopener"
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-sm font-semibold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50"
+                        >
+                            WhatsApp
+                        </a>
+                        <a
+                            :href="raffle.public_url"
+                            target="_blank"
+                            rel="noopener"
+                            class="rounded-lg bg-slate-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700"
+                        >
+                            Abrir
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Contadores -->
             <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <div
@@ -585,7 +673,12 @@ const placeLabel = (place: number) =>
                                         >
                                     </p>
                                     <p class="text-xs text-slate-500">
-                                        {{ p.email }}
+                                        {{ p.email || 'Sin correo' }}
+                                        <span
+                                            v-if="sourceLabel(p.source)"
+                                            class="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500"
+                                            >{{ sourceLabel(p.source) }}</span
+                                        >
                                     </p>
                                     <p
                                         v-if="extraData(p).length"
@@ -638,7 +731,7 @@ const placeLabel = (place: number) =>
                                     class="px-6 py-3.5 text-end whitespace-nowrap"
                                 >
                                     <button
-                                        v-if="p.status === 'invited'"
+                                        v-if="p.status === 'invited' && p.email"
                                         type="button"
                                         @click="resend(p)"
                                         :disabled="busyId === p.id"

@@ -11,6 +11,7 @@ class RaffleParticipant extends Model
     protected $fillable = [
         'raffle_id',
         'form_id',
+        'source',
         'name',
         'email',
         'token',

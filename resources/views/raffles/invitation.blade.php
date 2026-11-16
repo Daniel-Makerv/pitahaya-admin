@@ -390,7 +390,8 @@ var SCORING={"pesos": {"Máximo": 5, "Muy alto": 4, "Alto": 3, "Medio": 2}, "pre
 var CFG = @json($config);
 var FECHA_SORTEO = CFG.drawDate || 'fecha por confirmar';
 var CSRF = document.querySelector('meta[name="csrf-token"]').content;
-var KEY = 'pitamex-rifa-' + CFG.token;     // respaldo local por si se cae la conexión
+// Respaldo local por si se cae la conexión (en el link abierto también guarda el token del registro)
+var KEY = CFG.open ? 'pitamex-rifa-open-' + CFG.code : 'pitamex-rifa-' + CFG.token;
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -425,7 +426,12 @@ function prellenar() {
 }
 
 var S;
-if (CFG.number) {
+var localOpen = CFG.open ? load() : null;
+if (localOpen && localOpen.token) {
+  // Link abierto: este dispositivo ya había empezado (o terminado) un registro
+  S = localOpen;
+  CFG.token = S.token; CFG.progressUrl = S.progressUrl; CFG.confirmUrl = S.confirmUrl;
+} else if (CFG.number) {
   S = { step: 5, done: true, numero: CFG.number, a: Object.assign({ infraestructura: [] }, CFG.saved || {}) };
 } else {
   var local = load();
@@ -456,7 +462,25 @@ function respuestas() {
 }
 
 function guardarAvance() {
+  if (!CFG.token) { return; }
   post(CFG.progressUrl, { answers: respuestas(), step: S.step }).catch(function () {});
+}
+
+function mensajeError(r, porDefecto) {
+  var errs = r.json && r.json.errors ? Object.values(r.json.errors) : [];
+  return (errs[0] && errs[0][0]) || (r.json && r.json.message) || porDefecto;
+}
+
+// Link abierto: el registro se crea en el servidor al terminar el paso 1
+function asegurarRegistro() {
+  if (CFG.token) { return Promise.resolve(); }
+  return post(CFG.startUrl, { answers: respuestas(), step: Math.max(S.step, 1) }).then(function (r) {
+    if (!r.ok || !r.json.token) { throw new Error(mensajeError(r, 'No se pudo guardar su registro. Intente de nuevo.')); }
+    CFG.token = S.token = r.json.token;
+    CFG.progressUrl = S.progressUrl = r.json.progressUrl;
+    CFG.confirmUrl = S.confirmUrl = r.json.confirmUrl;
+    save();
+  }, function () { throw new Error('Sin conexión. Revise su internet e intente de nuevo; sus respuestas se conservan.'); });
 }
 var app = document.getElementById('app');
 
@@ -521,7 +545,7 @@ function renderDone() {
     '<div style="font-size:26px;font-weight:800;line-height:1.2;color:#173A2C">¡Gracias' + (nombre ? ', ' + esc(nombre) : '') + '! Su registro está completo</div>' +
     '<div class="ticket"><img src="' + esc(CFG.logo) + '" alt="" style="height:52px;width:auto;margin:0 auto 4px"><div class="eyebrow" style="color:#9E1249;letter-spacing:.12em">Su número para la rifa</div><div class="num">' + esc(S.numero) + '</div><div style="font-size:14px;color:#56645C">Sorteo con la Lotería Nacional · ' + esc(FECHA_SORTEO) + '</div></div>' +
     '<div style="font-size:15px;line-height:1.6;color:#56645C;max-width:480px">' + canal + ' Un asesor de PITAMEX lo contactará para programar una evaluación inicial de su proyecto.</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"><a href="https://pitamex.org" style="background:#173A2C;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 20px;border-radius:10px">Conocer más de PITAMEX</a></div></div>';
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">' + (CFG.open ? '<button type="button" class="next" style="min-height:48px;font-size:15px" data-act="otro">Registrar a otra persona</button>' : '') + '<a href="https://pitamex.org" style="background:#173A2C;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 20px;border-radius:10px">Conocer más de PITAMEX</a></div></div>';
 }
 
 function irArriba() { document.getElementById('registro').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -531,7 +555,7 @@ app.addEventListener('change', function (e) { var k = e.target.dataset.k; if (k)
 app.addEventListener('click', function (e) {
   var b = e.target.closest('button'); if (!b) { return; }
   var d = b.dataset;
-  if (d.go) { if (+d.go > S.step && !validar()) { render(); return; } S.step = +d.go; errores = []; save(); guardarAvance(); render(); irArriba(); return; }
+  if (d.go) { if (+d.go > S.step && CFG.open && !CFG.token) { return; } if (+d.go > S.step && !validar()) { render(); return; } S.step = +d.go; errores = []; save(); guardarAvance(); render(); irArriba(); return; }
   if (d.pick) { S.a[d.pick] = d.v; errores = errores.filter(function (x) { return x !== d.pick; }); save(); render(); return; }
   if (d.multi) {
     var arr = (S.a[d.multi] || []).slice(), i = arr.indexOf(d.v);
@@ -547,6 +571,7 @@ app.addEventListener('click', function (e) {
       function () { hint.textContent = 'No se pudo obtener la ubicación. Es opcional: puede continuar sin ella.'; }, { enableHighAccuracy: true, timeout: 10000 });
     return;
   }
+  if (d.act === 'otro') { try { localStorage.removeItem(KEY); } catch (e) {} location.reload(); return; }
   if (d.act === 'back') { S.step = Math.max(0, S.step - 1); errores = []; save(); render(); irArriba(); return; }
   if (d.act === 'next') {
     if (enviando) { return; }
@@ -555,16 +580,29 @@ app.addEventListener('click', function (e) {
     if (S.step === STEPS.length - 1) {
       if (!S.a._priv) { app.querySelector('.priv').style.color = '#B3123F'; app.querySelector('.priv').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       enviando = true; render();
-      post(CFG.confirmUrl, { answers: respuestas() }).then(function (r) {
-        enviando = false;
-        if (r.ok && r.json.number) {
-          S.numero = r.json.number; S.done = true; errores = []; save(); render(); irArriba(); return;
-        }
-        var errs = r.json.errors ? Object.values(r.json.errors) : [];
-        errorServidor = (errs[0] && errs[0][0]) || r.json.message || 'No se pudo enviar su registro. Intente de nuevo.';
-        render();
-      }).catch(function () {
-        enviando = false; errorServidor = 'Sin conexión. Revise su internet e intente de nuevo; sus respuestas se conservan.'; render();
+      asegurarRegistro().then(function () {
+        return post(CFG.confirmUrl, { answers: respuestas() }).then(function (r) {
+          enviando = false;
+          if (r.ok && r.json.number) {
+            S.numero = r.json.number; S.done = true; errores = []; save(); render(); irArriba(); return;
+          }
+          errorServidor = mensajeError(r, 'No se pudo enviar su registro. Intente de nuevo.');
+          render();
+        }, function () {
+          enviando = false; errorServidor = 'Sin conexión. Revise su internet e intente de nuevo; sus respuestas se conservan.'; render();
+        });
+      }).catch(function (e) {
+        enviando = false; errorServidor = e.message; render();
+      });
+      return;
+    }
+    // Link abierto: al terminar el paso 1 se crea el registro (y se valida que el teléfono no tenga boleto)
+    if (CFG.open && !CFG.token) {
+      enviando = true; render();
+      asegurarRegistro().then(function () {
+        enviando = false; S.step++; errores = []; save(); render(); irArriba();
+      }).catch(function (e) {
+        enviando = false; errorServidor = e.message; render();
       });
       return;
     }

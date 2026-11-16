@@ -207,4 +207,27 @@ Route::get('temario', function () {
     ]);
 })->name('temario');
 
+
+/* ---------- Página pública de la invitación (sin sesión) ---------- */
+Route::get('rifa/invitacion/{token}', [RaffleInvitationController::class, 'show'])
+    ->name('raffles.invitation.show');
+
+Route::post('rifa/invitacion/{token}/progreso', [RaffleInvitationController::class, 'progress'])
+    ->middleware('throttle:60,1')
+    ->name('raffles.invitation.progress');
+
+Route::post('rifa/invitacion/{token}', [RaffleInvitationController::class, 'confirm'])
+    ->middleware('throttle:10,1')
+    ->name('raffles.invitation.confirm');
+
+/* ---------- Registro sin correo: link público de cada rifa ---------- */
+Route::get('rifa/{code}', [RaffleInvitationController::class, 'openShow'])
+    ->where('code', '[A-Za-z0-9]{6,16}')
+    ->name('raffles.open.show');
+
+Route::post('rifa/{code}/registro', [RaffleInvitationController::class, 'openStart'])
+    ->where('code', '[A-Za-z0-9]{6,16}')
+    ->middleware('throttle:20,1')
+    ->name('raffles.open.start');
+
 require __DIR__ . '/settings.php';

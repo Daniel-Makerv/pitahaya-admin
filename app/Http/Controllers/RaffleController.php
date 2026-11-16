@@ -31,12 +31,12 @@ class RaffleController extends Controller
     {
         $raffles = Raffle::withCount([
             'participants',
-            'participants as confirmed_count' => fn($q) => $q->where('status', 'confirmed'),
+            'participants as confirmed_count' => fn ($q) => $q->where('status', 'confirmed'),
         ])
             ->with('winners')
             ->latest()
             ->get()
-            ->map(fn(Raffle $raffle) => [
+            ->map(fn (Raffle $raffle) => [
                 ...$this->rafflePayload($raffle),
                 'invited_count'   => $raffle->participants_count,
                 'confirmed_count' => $raffle->confirmed_count,
@@ -56,16 +56,17 @@ class RaffleController extends Controller
 
     public function show(Raffle $raffle)
     {
-        $raffle->load(['participants' => fn($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
+        $raffle->load(['participants' => fn ($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
 
         return Inertia::render('Raffles/Show', [
             'raffle'       => $this->rafflePayload($raffle),
             // Áreas de interés para el filtro del modal "Agregar a la rifa"
             'typeForms'    => TypeForm::orderBy('name')->get(['id', 'name']),
-            'participants' => $raffle->participants->map(fn(RaffleParticipant $p) => [
+            'participants' => $raffle->participants->map(fn (RaffleParticipant $p) => [
                 'id'           => $p->id,
                 'name'         => $p->name,
                 'email'        => $p->email,
+                'source'       => $p->source,
                 'status'       => $p->status,
                 'number'       => $raffle->formatNumber($p->number),
                 'place'        => $p->place,
@@ -118,7 +119,7 @@ class RaffleController extends Controller
         $limit = 200; // igual al máximo de invitaciones por envío
         $hideInvited = $request->boolean('hide_invited');
 
-        $invitedEmails = array_flip($raffle->participants()->pluck('email')->map(fn($e) => strtolower($e))->all());
+        $invitedEmails = array_flip($raffle->participants()->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all());
         $invitedFormIds = array_flip($raffle->participants()->whereNotNull('form_id')->pluck('form_id')->all());
 
         $query = Form::leftJoin('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
@@ -222,6 +223,7 @@ class RaffleController extends Controller
 
             $participant->fill([
                 'form_id'    => $form->id,
+                'source'     => 'form',
                 'name'       => $contact['name'],
                 'invited_at' => now(),
             ])->save();
@@ -236,13 +238,13 @@ class RaffleController extends Controller
 
         $message = $sent === 1 ? 'Se programó 1 invitación.' : "Se programaron {$sent} invitaciones.";
         if ($skipped) {
-            $message .= ' Omitidos: ' . implode(', ', $skipped) . '.';
+            $message .= ' Omitidos: '.implode(', ', $skipped).'.';
         }
 
         $redirect = back()->with('success', $message);
 
         return $failed
-            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: ' . implode(', ', $failed) . '. Usa «Reenviar» en la rifa.'])
+            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: '.implode(', ', $failed).'. Usa «Reenviar» en la rifa.'])
             : $redirect;
     }
 
@@ -275,6 +277,7 @@ class RaffleController extends Controller
         $participant = RaffleParticipant::create([
             'raffle_id'  => $raffle->id,
             'form_id'    => null,
+            'source'     => 'manual',
             // Sin nombre se usa el correo; se reemplaza cuando complete su registro
             'name'       => trim((string) ($data['name'] ?? '')) ?: $data['email'],
             'email'      => $data['email'],
@@ -291,6 +294,10 @@ class RaffleController extends Controller
     public function resend(Raffle $raffle, RaffleParticipant $participant)
     {
         abort_unless($participant->raffle_id === $raffle->id, 404);
+
+        if (! $participant->email) {
+            return back()->withErrors(['resend' => "{$participant->name} se registró sin correo; no hay a dónde reenviar."]);
+        }
 
         if (! $this->sendInvitation($raffle, $participant)) {
             return back()->withErrors(['resend' => "No se pudo enviar el correo a {$participant->email}."]);
@@ -384,7 +391,7 @@ class RaffleController extends Controller
             'lottery_number' => $raffle->lottery_number,
             'target_number'  => $raffle->formatNumber($raffle->target_number),
             'drawn_at'       => $raffle->drawn_at?->format('d/m/Y H:i'),
-            'winners'        => $raffle->winners->map(fn(RaffleParticipant $w) => [
+            'winners'        => $raffle->winners->map(fn (RaffleParticipant $w) => [
                 'id'       => $w->id,
                 'place'    => $w->place,
                 'prize'    => $raffle->prizeList()[$w->place - 1] ?? null,
@@ -394,6 +401,7 @@ class RaffleController extends Controller
                 'distance' => abs($w->number - (int) $raffle->target_number),
             ])->values(),
             'created_at'     => $raffle->created_at?->format('d/m/Y'),
+            'public_url'     => $raffle->public_code ? $raffle->publicUrl() : null,
         ];
     }
 

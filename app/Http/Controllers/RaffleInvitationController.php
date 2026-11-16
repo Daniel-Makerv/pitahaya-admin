@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\RaffleNumber;
+use App\Models\Raffle;
 use App\Models\RaffleParticipant;
 use App\Services\ScoringPitamex;
 use App\Support\FormContact;
@@ -14,11 +15,17 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Registro de productor + rifa (página pública a la que se llega desde el correo).
+ * Registro de productor + rifa.
  *
+ * Con invitación por correo (liga personal):
  *  GET  /rifa/invitacion/{token}            -> registro en 6 pasos (o boleto si ya confirmó)
  *  POST /rifa/invitacion/{token}/progreso   -> guarda el avance en cada "Siguiente"
  *  POST /rifa/invitacion/{token}            -> envía el registro: calificación + número + correo
+ *
+ * Sin correo (link público de la rifa, para compartir o usar en el stand):
+ *  GET  /rifa/{code}                        -> el mismo registro, vacío
+ *  POST /rifa/{code}/registro               -> al terminar el paso 1 crea al participante y regresa su token;
+ *                                              de ahí en adelante usa las mismas rutas de arriba
  */
 class RaffleInvitationController extends Controller
 {
@@ -37,18 +44,12 @@ class RaffleInvitationController extends Controller
         $saved = $participant->data ?? [];
 
         return view('raffles.invitation', [
-            'participant' => $participant,
-            'raffle'      => $raffle,
-            'config'      => [
+            'raffle' => $raffle,
+            'config' => [
+                ...$this->baseConfig($raffle),
                 'token'       => $participant->token,
                 'progressUrl' => route('raffles.invitation.progress', $participant->token),
                 'confirmUrl'  => route('raffles.invitation.confirm', $participant->token),
-                'logo'        => asset('images/raffles/logo-pitamex.png'),
-                'privacyUrl'  => config('raffles.privacy_url'),
-                'prizes'      => $raffle->prizeList(),
-                'drawDate'    => $raffle->draw_date?->locale('es')->translatedFormat('d \d\e F \d\e Y'),
-                'digits'      => $raffle->digits,
-                'closed'      => ! $raffle->isOpen(),
 
                 // Avance guardado (si ya había empezado)
                 'saved'       => $saved ?: null,
@@ -61,6 +62,85 @@ class RaffleInvitationController extends Controller
                 'prefill'     => $saved ? null : $this->prefill($participant),
                 'expoAnswers' => $saved ? null : $this->expoAnswers($participant),
             ],
+        ]);
+    }
+
+    /**
+     * GET /rifa/{code} — registro sin invitación (formulario vacío).
+     */
+    public function openShow(string $code)
+    {
+        $raffle = Raffle::where('public_code', strtoupper($code))->firstOrFail();
+
+        if (! $raffle->isOpen()) {
+            return view('raffles.closed', ['raffle' => $raffle, 'participant' => null]);
+        }
+
+        return view('raffles.invitation', [
+            'raffle' => $raffle,
+            'config' => [
+                ...$this->baseConfig($raffle),
+                'open'     => true,
+                'code'     => $raffle->public_code,
+                'startUrl' => route('raffles.open.start', $raffle->public_code),
+                'token'    => null,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /rifa/{code}/registro — crea al participante con los datos del paso 1.
+     * Regresa su token para que el resto del registro use las rutas normales.
+     */
+    public function openStart(Request $request, string $code): JsonResponse
+    {
+        $raffle = Raffle::where('public_code', strtoupper($code))->firstOrFail();
+
+        if (! $raffle->isOpen()) {
+            return response()->json(['message' => 'Esta rifa ya se sorteó y no recibe más participantes.'], 409);
+        }
+
+        $request->validate([
+            'answers'          => ['required', 'array', 'max:80'],
+            'answers.nombre'   => ['required', 'string', 'max:255'],
+            'answers.telefono' => ['required', 'string', 'max:30', $this->phoneRule()],
+            'answers.correo'   => ['nullable', 'email', 'max:255'],
+            'step'             => ['required', 'integer', 'between:0,6'],
+        ], $this->messages());
+
+        $answers = $this->cleanAnswers($request->input('answers'));
+
+        if ($raffle->confirmedWithPhone($answers['telefono'])) {
+            return response()->json(['message' => $this->phoneTakenMessage()], 409);
+        }
+
+        $email = ! empty($answers['correo']) ? mb_strtolower($answers['correo']) : null;
+
+        // Si ya tenía invitación con ese correo, se continúa con esa (no se duplica)
+        $participant = $email
+            ? RaffleParticipant::where('raffle_id', $raffle->id)->where('email', $email)->first()
+            : null;
+
+        if ($participant?->status === 'confirmed') {
+            return response()->json(['message' => 'Ese correo ya está registrado en esta rifa. Revise su correo: ahí está su número.'], 409);
+        }
+
+        $participant ??= new RaffleParticipant([
+            'raffle_id' => $raffle->id,
+            'source'    => 'open',
+            'email'     => $email,
+        ]);
+
+        $participant->fill([
+            'name' => trim($answers['nombre']),
+            'data' => array_merge($participant->data ?? [], $answers),
+            'step' => max((int) $participant->step, (int) $request->input('step')),
+        ])->save();
+
+        return response()->json([
+            'token'       => $participant->token,
+            'progressUrl' => route('raffles.invitation.progress', $participant->token),
+            'confirmUrl'  => route('raffles.invitation.confirm', $participant->token),
         ]);
     }
 
@@ -100,34 +180,43 @@ class RaffleInvitationController extends Controller
         $request->validate([
             'answers'           => ['required', 'array', 'max:80'],
             'answers.nombre'    => ['required', 'string', 'max:255'],
-            'answers.telefono'  => ['required', 'string', 'max:30', function ($attr, $value, $fail) {
-                if (strlen(preg_replace('/\D/', '', (string) $value)) < 10) {
-                    $fail('El teléfono debe tener 10 dígitos.');
-                }
-            }],
+            'answers.telefono'  => ['required', 'string', 'max:30', $this->phoneRule()],
             'answers.correo'    => ['nullable', 'email', 'max:255'],
             'answers.estado'    => ['required', 'string', 'max:100'],
             'answers.municipio' => ['required', 'string', 'max:150'],
             'answers._priv'     => ['accepted'],
-        ], [
-            'answers.nombre.required'    => 'Escriba su nombre completo.',
-            'answers.telefono.required'  => 'Escriba su teléfono.',
-            'answers.correo.email'       => 'El correo no es válido.',
-            'answers.estado.required'    => 'Seleccione su estado.',
-            'answers.municipio.required' => 'Escriba su municipio.',
-            'answers._priv.accepted'     => 'Debe aceptar el aviso de privacidad.',
-        ]);
+        ], $this->messages());
 
         $answers = $this->cleanAnswers($request->input('answers'));
         $wasConfirmed = $participant->status === 'confirmed';
+
+        // Un boleto por persona: el teléfono no se puede repetir en la misma rifa
+        if ($raffle->confirmedWithPhone($answers['telefono'], $participant->id)) {
+            return response()->json(['message' => $this->phoneTakenMessage()], 409);
+        }
+
+        // Quien se registró sin correo y lo dio en el formulario: se guarda para mandarle su número
+        if (! $participant->email && ! empty($answers['correo'])) {
+            $email = mb_strtolower($answers['correo']);
+            $taken = RaffleParticipant::where('raffle_id', $raffle->id)->where('email', $email)->where('id', '!=', $participant->id)->exists();
+            if (! $taken) {
+                $participant->update(['email' => $email]);
+            }
+        }
+
+        // La calificación es interna: si falla, el productor igual recibe su número
+        try {
+            [$score, $priority] = $scoring->calificar($answers, completo: true);
+        } catch (Throwable $e) {
+            Log::error('Rifa: no se pudo calificar el registro', ['participant' => $participant->id, 'error' => $e->getMessage()]);
+            [$score, $priority] = [null, null];
+        }
 
         try {
             $participant = $raffle->confirmParticipant($participant, $answers);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 409);
         }
-
-        [$score, $priority] = $scoring->calificar($answers, completo: true);
 
         $participant->update([
             'name'     => trim($answers['nombre']),
@@ -147,6 +236,51 @@ class RaffleInvitationController extends Controller
     }
 
     /* ---------------------------------------------------------------- */
+
+    /** Datos de la rifa que usa la página en los dos modos */
+    private function baseConfig(Raffle $raffle): array
+    {
+        return [
+            'open'        => false,
+            'logo'        => asset('images/raffles/logo-pitamex.png'),
+            'privacyUrl'  => config('raffles.privacy_url'),
+            'prizes'      => $raffle->prizeList(),
+            'drawDate'    => $raffle->draw_date?->locale('es')->translatedFormat('d \d\e F \d\e Y'),
+            'digits'      => $raffle->digits,
+            'closed'      => ! $raffle->isOpen(),
+            'saved'       => null,
+            'step'        => 0,
+            'number'      => null,
+            'prefill'     => null,
+            'expoAnswers' => null,
+        ];
+    }
+
+    private function phoneRule(): \Closure
+    {
+        return function ($attr, $value, $fail) {
+            if (strlen(preg_replace('/\D/', '', (string) $value)) < 10) {
+                $fail('El teléfono debe tener 10 dígitos.');
+            }
+        };
+    }
+
+    private function phoneTakenMessage(): string
+    {
+        return 'Este teléfono ya tiene un boleto en esta rifa. Solo se permite un número por persona.';
+    }
+
+    private function messages(): array
+    {
+        return [
+            'answers.nombre.required'    => 'Escriba su nombre completo.',
+            'answers.telefono.required'  => 'Escriba su teléfono.',
+            'answers.correo.email'       => 'El correo no es válido.',
+            'answers.estado.required'    => 'Seleccione su estado.',
+            'answers.municipio.required' => 'Escriba su municipio.',
+            'answers._priv.accepted'     => 'Debe aceptar el aviso de privacidad.',
+        ];
+    }
 
     private function findParticipant(string $token): RaffleParticipant
     {
@@ -173,7 +307,7 @@ class RaffleInvitationController extends Controller
             }
 
             if (is_array($value)) {
-                $clean[$key] = array_values(array_map(fn($v) => mb_substr((string) $v, 0, 255), array_filter($value, 'is_scalar')));
+                $clean[$key] = array_values(array_map(fn ($v) => mb_substr((string) $v, 0, 255), array_filter($value, 'is_scalar')));
                 continue;
             }
 
@@ -223,8 +357,8 @@ class RaffleInvitationController extends Controller
 
         return collect(FormContact::decode($participant->form->form))
             ->except(['id', 'fecha', 'send_api'])
-            ->filter(fn($v) => is_scalar($v) && trim((string) $v) !== '')
-            ->map(fn($v) => (string) $v)
+            ->filter(fn ($v) => is_scalar($v) && trim((string) $v) !== '')
+            ->map(fn ($v) => (string) $v)
             ->all();
     }
 

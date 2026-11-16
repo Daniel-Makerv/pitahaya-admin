@@ -10,6 +10,7 @@ use RuntimeException;
 class Raffle extends Model
 {
     protected $fillable = [
+        'public_code',
         'name',
         'description',
         'prize',
@@ -28,6 +29,50 @@ class Raffle extends Model
         'drawn_at'      => 'datetime',
         'target_number' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Raffle $raffle) {
+            $raffle->public_code ??= self::newPublicCode();
+        });
+    }
+
+    /** Código del link público (8 caracteres, sin 0/O ni 1/I) */
+    public static function newPublicCode(): string
+    {
+        do {
+            $code = '';
+            for ($i = 0; $i < 8; $i++) {
+                $code .= 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[random_int(0, 31)];
+            }
+        } while (self::where('public_code', $code)->exists());
+
+        return $code;
+    }
+
+    /** Link para registrarse sin correo de invitación */
+    public function publicUrl(): string
+    {
+        return route('raffles.open.show', $this->public_code);
+    }
+
+    /**
+     * Otro participante de esta rifa ya confirmado con el mismo teléfono (un boleto por persona).
+     */
+    public function confirmedWithPhone(string $phone, ?int $exceptParticipantId = null): ?RaffleParticipant
+    {
+        $digits = substr(preg_replace('/\D/', '', $phone), -10);
+
+        if (strlen($digits) < 10) {
+            return null;
+        }
+
+        return $this->participants()
+            ->where('status', 'confirmed')
+            ->when($exceptParticipantId, fn ($q) => $q->where('id', '!=', $exceptParticipantId))
+            ->get()
+            ->first(fn (RaffleParticipant $p) => substr(preg_replace('/\D/', '', (string) ($p->data['telefono'] ?? '')), -10) === $digits);
+    }
 
     public function participants(): HasMany
     {
