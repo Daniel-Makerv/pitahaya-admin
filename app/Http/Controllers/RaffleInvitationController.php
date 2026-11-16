@@ -173,7 +173,7 @@ class RaffleInvitationController extends Controller
             }
 
             if (is_array($value)) {
-                $clean[$key] = array_values(array_map(fn ($v) => mb_substr((string) $v, 0, 255), array_filter($value, 'is_scalar')));
+                $clean[$key] = array_values(array_map(fn($v) => mb_substr((string) $v, 0, 255), array_filter($value, 'is_scalar')));
                 continue;
             }
 
@@ -202,8 +202,11 @@ class RaffleInvitationController extends Controller
     {
         $contact = $participant->form ? FormContact::from($participant->form) : ['phone' => null];
 
+        // En invitaciones manuales sin nombre, "name" guarda el correo: no se prellena
+        $name = $participant->name === $participant->email ? null : $participant->name;
+
         return array_filter([
-            'nombre'   => $participant->name,
+            'nombre'   => $name,
             'telefono' => $contact['phone'] ? preg_replace('/[^\d\s+]/', '', $contact['phone']) : null,
             'correo'   => $participant->email,
         ]);
@@ -220,8 +223,8 @@ class RaffleInvitationController extends Controller
 
         return collect(FormContact::decode($participant->form->form))
             ->except(['id', 'fecha', 'send_api'])
-            ->filter(fn ($v) => is_scalar($v) && trim((string) $v) !== '')
-            ->map(fn ($v) => (string) $v)
+            ->filter(fn($v) => is_scalar($v) && trim((string) $v) !== '')
+            ->map(fn($v) => (string) $v)
             ->all();
     }
 

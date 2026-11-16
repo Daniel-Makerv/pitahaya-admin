@@ -19,7 +19,8 @@ class ScoringPitamex
 
     public function __construct(?string $ruta = null)
     {
-        $ruta ??= storage_path('app/scoring-pitamex.json');
+        // En resources/data para que se suba con git (storage/app está ignorado)
+        $ruta ??= resource_path('data/scoring-pitamex.json');
         $this->cfg = json_decode(file_get_contents($ruta), true, flags: JSON_THROW_ON_ERROR);
     }
 

@@ -6,9 +6,12 @@ use App\Mail\RaffleInvitation;
 use App\Models\Form;
 use App\Models\Raffle;
 use App\Models\RaffleParticipant;
+use App\Models\TypeForm;
 use App\Support\FormContact;
+use App\Support\FormFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -28,12 +31,12 @@ class RaffleController extends Controller
     {
         $raffles = Raffle::withCount([
             'participants',
-            'participants as confirmed_count' => fn ($q) => $q->where('status', 'confirmed'),
+            'participants as confirmed_count' => fn($q) => $q->where('status', 'confirmed'),
         ])
             ->with('winners')
             ->latest()
             ->get()
-            ->map(fn (Raffle $raffle) => [
+            ->map(fn(Raffle $raffle) => [
                 ...$this->rafflePayload($raffle),
                 'invited_count'   => $raffle->participants_count,
                 'confirmed_count' => $raffle->confirmed_count,
@@ -53,11 +56,13 @@ class RaffleController extends Controller
 
     public function show(Raffle $raffle)
     {
-        $raffle->load(['participants' => fn ($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
+        $raffle->load(['participants' => fn($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
 
         return Inertia::render('Raffles/Show', [
             'raffle'       => $this->rafflePayload($raffle),
-            'participants' => $raffle->participants->map(fn (RaffleParticipant $p) => [
+            // Áreas de interés para el filtro del modal "Agregar a la rifa"
+            'typeForms'    => TypeForm::orderBy('name')->get(['id', 'name']),
+            'participants' => $raffle->participants->map(fn(RaffleParticipant $p) => [
                 'id'           => $p->id,
                 'name'         => $p->name,
                 'email'        => $p->email,
@@ -100,58 +105,78 @@ class RaffleController extends Controller
      * ========================================================= */
 
     /**
-     * GET /raffles/{raffle}/candidates?search=
-     * Registros de formularios con correo que todavía no están invitados a esta rifa.
+     * GET /raffles/{raffle}/candidates
+     *   ?search=          nombre, correo, teléfono o cualquier respuesta
+     *   &type_form_id=    área de interés
+     *   &from=&to=        fecha del registro (Y-m-d)
+     *   &hide_invited=1   ocultar los que ya están invitados a esta rifa
+     *
+     * Registros de formularios con correo (uno por correo). Regresa hasta 200 y el total que coincide.
      */
     public function candidates(Request $request, Raffle $raffle): JsonResponse
     {
-        $search = trim((string) $request->input('search', ''));
+        $limit = 200; // igual al máximo de invitaciones por envío
+        $hideInvited = $request->boolean('hide_invited');
 
-        $invitedEmails = $raffle->participants()->pluck('email')->map(fn ($e) => strtolower($e))->all();
-        $invitedFormIds = $raffle->participants()->whereNotNull('form_id')->pluck('form_id')->all();
+        $invitedEmails = array_flip($raffle->participants()->pluck('email')->map(fn($e) => strtolower($e))->all());
+        $invitedFormIds = array_flip($raffle->participants()->whereNotNull('form_id')->pluck('form_id')->all());
 
         $query = Form::leftJoin('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
             ->select('forms.id', 'forms.name', 'forms.form', 'forms.created_at', 'type_forms.name as type')
             ->orderByDesc('forms.id');
 
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('forms.name', 'like', "%{$search}%")
-                    ->orWhere('type_forms.name', 'like', "%{$search}%")
-                    ->orWhere('forms.form', 'like', "%{$search}%");
-            });
-        }
+        FormFilters::apply(
+            $query,
+            trim((string) $request->input('search', '')) ?: null,
+            $request->input('type_form_id') ?: null,
+            $request->input('from') ?: null,
+            $request->input('to') ?: null,
+        );
 
         $candidates = [];
         $seenEmails = [];
+        $total = 0;
+        $available = 0;
 
-        // Se recorren por bloques hasta juntar 100 con correo
         foreach ($query->cursor() as $form) {
             $contact = FormContact::from($form);
             $email = $contact['email'];
 
-            if (! $email || in_array($email, $seenEmails, true)) {
+            if (! $email || isset($seenEmails[$email])) {
+                continue;
+            }
+            $seenEmails[$email] = true;
+
+            $invited = isset($invitedEmails[$email]) || isset($invitedFormIds[$form->id]);
+
+            if ($invited && $hideInvited) {
                 continue;
             }
 
-            $seenEmails[] = $email;
+            $total++;
+            if (! $invited) {
+                $available++;
+            }
 
-            $candidates[] = [
-                'id'      => $form->id,
-                'name'    => $contact['name'],
-                'email'   => $email,
-                'phone'   => $contact['phone'],
-                'type'    => $form->type,
-                'date'    => $form->created_at?->format('d/m/Y'),
-                'invited' => in_array($email, $invitedEmails, true) || in_array($form->id, $invitedFormIds, true),
-            ];
-
-            if (count($candidates) >= 100) {
-                break;
+            if (count($candidates) < $limit) {
+                $candidates[] = [
+                    'id'      => $form->id,
+                    'name'    => $contact['name'],
+                    'email'   => $email,
+                    'phone'   => $contact['phone'],
+                    'type'    => $form->type,
+                    'date'    => $form->created_at?->format('d/m/Y'),
+                    'invited' => $invited,
+                ];
             }
         }
 
-        return response()->json(['data' => $candidates]);
+        return response()->json([
+            'data'      => $candidates,
+            'total'     => $total,      // registros con correo que coinciden con los filtros
+            'available' => $available,  // de esos, los que aún no están invitados
+            'limit'     => $limit,
+        ]);
     }
 
     /**
@@ -211,14 +236,56 @@ class RaffleController extends Controller
 
         $message = $sent === 1 ? 'Se programó 1 invitación.' : "Se programaron {$sent} invitaciones.";
         if ($skipped) {
-            $message .= ' Omitidos: '.implode(', ', $skipped).'.';
+            $message .= ' Omitidos: ' . implode(', ', $skipped) . '.';
         }
 
         $redirect = back()->with('success', $message);
 
         return $failed
-            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: '.implode(', ', $failed).'. Usa «Reenviar» en la rifa.'])
+            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: ' . implode(', ', $failed) . '. Usa «Reenviar» en la rifa.'])
             : $redirect;
+    }
+
+    /**
+     * POST /raffles/{raffle}/invite-manual  { email, name? }
+     * Invita a alguien que no está en los formularios.
+     */
+    public function inviteManual(Request $request, Raffle $raffle)
+    {
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
+
+        $data = $request->validate([
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('raffle_participants', 'email')->where('raffle_id', $raffle->id),
+            ],
+            'name'  => ['nullable', 'string', 'max:255'],
+        ], [
+            'email.required' => 'Escribe el correo.',
+            'email.email'    => 'El correo no es válido.',
+            'email.unique'   => 'Ese correo ya está invitado a esta rifa.',
+        ]);
+
+        if (! $raffle->isOpen()) {
+            return back()->withErrors(['email' => 'Esta rifa ya fue sorteada.']);
+        }
+
+        $participant = RaffleParticipant::create([
+            'raffle_id'  => $raffle->id,
+            'form_id'    => null,
+            // Sin nombre se usa el correo; se reemplaza cuando complete su registro
+            'name'       => trim((string) ($data['name'] ?? '')) ?: $data['email'],
+            'email'      => $data['email'],
+            'invited_at' => now(),
+        ]);
+
+        if (! $this->sendInvitation($raffle, $participant)) {
+            return back()->withErrors(['email' => "Se agregó, pero no se pudo programar el correo a {$participant->email}. Usa «Reenviar»."]);
+        }
+
+        return back()->with('success', "Invitación programada para {$participant->email}.");
     }
 
     public function resend(Raffle $raffle, RaffleParticipant $participant)
@@ -317,7 +384,7 @@ class RaffleController extends Controller
             'lottery_number' => $raffle->lottery_number,
             'target_number'  => $raffle->formatNumber($raffle->target_number),
             'drawn_at'       => $raffle->drawn_at?->format('d/m/Y H:i'),
-            'winners'        => $raffle->winners->map(fn (RaffleParticipant $w) => [
+            'winners'        => $raffle->winners->map(fn(RaffleParticipant $w) => [
                 'id'       => $w->id,
                 'place'    => $w->place,
                 'prize'    => $raffle->prizeList()[$w->place - 1] ?? null,

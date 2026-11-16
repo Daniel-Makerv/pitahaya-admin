@@ -1,0 +1,358 @@
+{
+    "_descripcion": "Calificación de compatibilidad del productor · PITAMEX Expo Agroalimentaria 2026. Los PESOS vienen del formulario de PITAMEX (columna 'Peso Scoring'). Los VALORES por respuesta (0 a 1) son una PROPUESTA de Brounie basada en la carta de PITAMEX (perfil agroclimático de referencia) y Javier debe validarlos.",
+    "_formula": "compatibilidad % = suma(peso x valor de la respuesta) / suma(peso de las preguntas contestadas) x 100. Las preguntas opcionales sin respuesta no cuentan, para no castigar a quien no las conteste.",
+    "pesos": {
+        "Máximo": 5,
+        "Muy alto": 4,
+        "Alto": 3,
+        "Medio": 2
+    },
+    "preguntas": {
+        "superficie": {
+            "peso": "Muy alto",
+            "valores": {
+                "Más de 10 ha": 1,
+                "5 a 10 ha": 0.9,
+                "3 a 5 ha": 0.75,
+                "1 a 3 ha": 0.5,
+                "Menos de 1 ha": 0.3
+            }
+        },
+        "propia": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "Parcialmente": 0.6,
+                "No": 0.3
+            }
+        },
+        "propiedad": {
+            "peso": "Medio",
+            "valores": {
+                "Privada": 1,
+                "Familiar": 0.8,
+                "Sociedad": 0.8,
+                "Ejidal": 0.6,
+                "Arrendada": 0.5,
+                "Comodato": 0.4
+            }
+        },
+        "ubicacion": {
+            "peso": "Muy alto",
+            "valores": {
+                "compartida": 1
+            },
+            "_nota": "Solo cuenta si la comparte; sirve para validar zona"
+        },
+        "terreno": {
+            "peso": "Medio",
+            "valores": {
+                "Plano": 1,
+                "Mixto": 0.7,
+                "Ladera": 0.5,
+                "Lo desconozco": 0.4
+            }
+        },
+        "clima": {
+            "peso": "Máximo",
+            "valores": {
+                "Templado subhúmedo": 1,
+                "Templado seco": 0.85,
+                "Semiárido": 0.7,
+                "Tropical húmedo": 0.6,
+                "Muy húmedo": 0.3
+            }
+        },
+        "tmax": {
+            "peso": "Muy alto",
+            "valores": {
+                "25–30 °C": 1,
+                "30–35 °C": 0.8,
+                "20–25 °C": 0.7,
+                "Más de 35 °C": 0.4
+            }
+        },
+        "tmin": {
+            "peso": "Máximo",
+            "valores": {
+                "5–10 °C": 1,
+                "Más de 10 °C": 0.9,
+                "1–5 °C": 0.85,
+                "0 °C o menos": 0.2
+            }
+        },
+        "heladas": {
+            "peso": "Máximo",
+            "valores": {
+                "Nunca": 1,
+                "Ocasionalmente": 0.5,
+                "Frecuentemente": 0.1
+            }
+        },
+        "altitud": {
+            "peso": "Muy alto",
+            "valores": {
+                "0–500 msnm": 1,
+                "500–1,000 msnm": 1,
+                "1,000–1,500 msnm": 1,
+                "1,500–2,000 msnm": 0.85,
+                "Más de 2,000 msnm": 0.3
+            }
+        },
+        "precipitacion": {
+            "peso": "Muy alto",
+            "valores": {
+                "Media": 1,
+                "Baja": 0.8,
+                "Alta": 0.6,
+                "Muy alta": 0.3
+            }
+        },
+        "fuente": {
+            "peso": "Muy alto",
+            "valores": {
+                "Pozo": 1,
+                "Presa": 0.8,
+                "Río": 0.7,
+                "Municipal": 0.5,
+                "Otro": 0.5,
+                "Temporal": 0.2
+            }
+        },
+        "disponibilidad": {
+            "peso": "Muy alto",
+            "valores": {
+                "Abundante": 1,
+                "Moderada": 0.7,
+                "Limitada": 0.3
+            }
+        },
+        "riego": {
+            "peso": "Alto",
+            "valores": {
+                "Sí": 1,
+                "No": 0.3
+            }
+        },
+        "tipo_riego": {
+            "peso": "Medio",
+            "valores": {
+                "Manguera con goteros": 1,
+                "Cintilla": 0.9,
+                "Aspersión": 0.5,
+                "Pivote": 0.5,
+                "Otro": 0.5,
+                "Rodado": 0.3
+            }
+        },
+        "electricidad": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.3
+            }
+        },
+        "conagua": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.4
+            }
+        },
+        "conoce_suelo": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.5
+            }
+        },
+        "tipo_suelo": {
+            "peso": "Muy alto",
+            "valores": {
+                "Franco": 1,
+                "Mixto": 0.7,
+                "Arcilloso": 0.6,
+                "Arenoso": 0.6,
+                "Lo desconozco": 0.5,
+                "Pedregoso": 0.4
+            }
+        },
+        "analisis": {
+            "peso": "Alto",
+            "valores": {
+                "Sí": 1,
+                "No": 0.4
+            }
+        },
+        "ph": {
+            "peso": "Alto",
+            "valores": {
+                "6.5–7.5": 1,
+                "5.5–6.5": 0.8,
+                "7.5–8.5": 0.7,
+                "Lo desconozco": 0.5,
+                "Menos de 5.5": 0.4,
+                "Más de 8.5": 0.3
+            }
+        },
+        "drenaje": {
+            "peso": "Muy alto",
+            "valores": {
+                "Ninguno": 1,
+                "Moderado": 0.5,
+                "Severo": 0.1
+            }
+        },
+        "experiencia": {
+            "peso": "Alto",
+            "valores": {
+                "Avanzada": 1,
+                "Media": 0.8,
+                "Básica": 0.5,
+                "Ninguna": 0.3
+            }
+        },
+        "asesor": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.6
+            }
+        },
+        "personal": {
+            "peso": "Medio",
+            "valores": {
+                "1 a 5": 0.6,
+                "6 a 30": 0.9,
+                "31 a 100": 1,
+                "Más de 100": 1
+            }
+        },
+        "certificacion": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.5
+            }
+        },
+        "inversion": {
+            "peso": "Muy alto",
+            "valores": {
+                "Más de $2 millones": 1,
+                "$700 mil – $2 millones": 0.9,
+                "$200 mil – $700 mil": 0.5,
+                "Menos de $200 mil": 0.2
+            }
+        },
+        "financiamiento": {
+            "peso": "Alto",
+            "valores": {
+                "No": 1,
+                "Parcialmente": 0.7,
+                "Sí": 0.4
+            }
+        },
+        "infraestructura": {
+            "peso": "Alto",
+            "tipo": "multi",
+            "_regla": "valor = cuántas de [Bodega, Tractor, Cercado, Riego] marcó / 4; 'Ninguna' = 0"
+        },
+        "busca": {
+            "peso": "Alto",
+            "valores": {
+                "Rentabilidad": 1,
+                "Exportar": 1,
+                "Proyecto familiar": 0.8,
+                "Diversificar": 0.8,
+                "Aprender": 0.6
+            }
+        },
+        "comercializar": {
+            "peso": "Muy alto",
+            "valores": {
+                "Sí": 1,
+                "Tal vez": 0.6,
+                "No": 0.2
+            }
+        },
+        "limpia": {
+            "peso": "Muy alto",
+            "valores": {
+                "Sí": 1,
+                "No": 0.3
+            }
+        },
+        "inocuidad": {
+            "peso": "Alto",
+            "valores": {
+                "Sí": 1,
+                "Quiero más información": 0.7,
+                "No": 0.2
+            }
+        },
+        "valora": {
+            "peso": "Muy alto",
+            "valores": {
+                "Calidad": 1,
+                "Mercado seguro": 1,
+                "Asesoría": 0.9,
+                "Exportación": 0.9,
+                "Precio": 0.5
+            }
+        },
+        "factura": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No": 0.4
+            }
+        },
+        "regimen": {
+            "peso": "Medio",
+            "valores": {
+                "Persona moral": 1,
+                "Persona física": 0.9,
+                "Ejidal": 0.7,
+                "Otro": 0.6
+            }
+        },
+        "acta": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "No aplica": 0.8,
+                "No": 0.5
+            }
+        },
+        "regularizada": {
+            "peso": "Medio",
+            "valores": {
+                "Sí": 1,
+                "Parcialmente": 0.5,
+                "No": 0.2
+            }
+        }
+    },
+    "no_califican": [
+        "nombre",
+        "telefono",
+        "correo",
+        "estado",
+        "municipio",
+        "conocio",
+        "predios",
+        "precip_mm",
+        "agua_max",
+        "cultivos",
+        "etapa",
+        "decision",
+        "iniciar",
+        "prioridad",
+        "comentarios"
+    ],
+    "prioridad": {
+        "A": "compatibilidad >= 75 Y (iniciar en ['Próximo ciclo','Inmediatamente'] O etapa = 'Avanzado')",
+        "B": "compatibilidad >= 50 (y no es A)",
+        "C": "compatibilidad < 50 O no completó el registro"
+    }
+}
