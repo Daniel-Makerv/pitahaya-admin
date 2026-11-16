@@ -194,4 +194,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('raffles/{raffle}/draw', [RaffleController::class, 'draw'])->name('raffles.draw');
 });
 
+// Temario de PITAMEX (botón "Descargar temario" del correo)
+Route::get('temario', function () {
+    $path = public_path('docs/Temario-PITAMEX.pdf');
+
+    abort_unless(file_exists($path), 404);
+
+    return response()->file($path, [
+        'Content-Type'        => 'application/pdf',
+        // "inline": se abre en el navegador; desde ahí se puede descargar con este nombre
+        'Content-Disposition' => 'inline; filename="Temario-PITAMEX.pdf"',
+    ]);
+})->name('temario');
+
 require __DIR__ . '/settings.php';

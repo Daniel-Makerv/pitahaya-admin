@@ -83,6 +83,44 @@ textarea.field{resize:vertical}
 .alert{background:#FBE9F0;color:#9E1249;font-size:14px;font-weight:600;padding:12px 14px;border-radius:10px}
 .next:disabled{opacity:.6;cursor:wait}
 .rule{margin:0;font-size:14px;line-height:1.55;color:#A9C2B2;max-width:620px}
+.svc{max-width:1200px;margin:0 auto;padding:8px 24px 88px;display:flex;flex-direction:column;gap:22px;scroll-margin-top:16px}
+.svc-head{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.svc-head h2{margin:0;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:-.02em;color:#173A2C}
+.svc-head p{margin:0;font-size:16px;line-height:1.6;color:#56645C}
+.svc-list{display:flex;flex-direction:column;gap:10px}
+.svc-item{background:#fff;border:1px solid #E1E5DE;border-radius:16px;overflow:hidden;transition:box-shadow .2s}
+.svc-item[open]{box-shadow:0 12px 32px rgba(20,33,27,.08);border-color:#CFE0D5}
+.svc-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:18px 20px}
+.svc-item summary::-webkit-details-marker{display:none}
+.svc-n{flex:none;width:40px;height:40px;border-radius:12px;background:#FBE9F0;color:#C8195F;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
+.svc-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.svc-t b{font-size:16.5px;color:#14211B}
+.svc-t small{font-size:13.5px;color:#6A776F}
+.svc-p{flex:none;text-align:right;font-weight:800;font-size:16px;color:#173A2C;display:flex;flex-direction:column}
+.svc-p small{font-size:12px;font-weight:600;color:#6A776F}
+.svc-chev{flex:none;width:10px;height:10px;border-right:2px solid #56645C;border-bottom:2px solid #56645C;transform:rotate(45deg);margin:0 4px 4px 4px;transition:transform .2s}
+.svc-item[open] .svc-chev{transform:rotate(225deg)}
+.svc-body{padding:0 20px 22px 76px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.6;color:#34463C}
+.svc-body p{margin:0}
+.svc-body ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.svc-body .svc-small{font-size:13.5px;color:#6A776F}
+.svc-note{background:#FDF5DA;color:#3A2E0B;border-radius:10px;padding:10px 14px;font-size:14.5px}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.svc-grid>div{background:#F5F7F3;border-radius:12px;padding:14px 16px}
+.svc-grid h4{margin:0 0 6px;font-size:14px;color:#C8195F;text-transform:uppercase;letter-spacing:.06em}
+.svc-grid ul{font-size:14px}
+.svc-fig{margin:4px 0 0}
+.svc-fig img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid #E1E5DE}
+.svc-fig figcaption{font-size:13px;color:#6A776F;margin-top:6px}
+.svc-wa{align-self:flex-start;background:#173A2C;color:#fff!important;text-decoration:none;font-weight:700;font-size:15px;padding:12px 18px;border-radius:10px;margin-top:4px}
+.svc-wa:hover{background:#24563F}
+@media (max-width:640px){
+  .svc-head h2{font-size:28px}
+  .svc-item summary{gap:12px;padding:16px}
+  .svc-n{width:34px;height:34px;font-size:15px}
+  .svc-p{display:none}
+  .svc-body{padding:0 16px 20px}
+}
 .done{padding:40px 28px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
 .check{width:56px;height:56px;border-radius:999px;background:#E6EFE8;display:flex;align-items:center;justify-content:center}
 .ticket{width:100%;max-width:420px;border:2px dashed #C8195F;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;gap:6px;background:#FDF4F8}
@@ -120,7 +158,7 @@ footer .logo-box img{height:64px}
 <body>
 <header><div class="wrap">
   <img src="{{ $config['logo'] }}" alt="PITAMEX · Pitahaya de México">
-  <div class="hlinks"><span>Expo Agroalimentaria Guanajuato 2026</span><a href="#registro" class="btn-pink">Registrarme</a></div>
+  <div class="hlinks"><span>Expo Agroalimentaria Guanajuato 2026</span><a href="#servicios" style="color:#173A2C;text-decoration:none">Servicios</a><a href="#registro" class="btn-pink">Registrarme</a></div>
 </div></header>
 
 <section class="hero"><div class="wrap">
@@ -162,6 +200,105 @@ footer .logo-box img{height:64px}
     <div class="dc"><small>Margen preliminar</small><div style="color:#F2C230">$875,000/año</div></div>
   </div>
   <p class="note">Valores de referencia por hectárea: 25,000 kg × $50 = $1,250,000 de ingreso; 25,000 kg × $15 = $375,000 de costo; diferencia de $875,000 (temporada 2026), antes de otros gastos, impuestos y recuperación de la inversión. Son ilustrativos y varían según variedad, calidad, temporada y mercado. Cada proyecto se evalúa individualmente (PROPEP, análisis financiero o prueba piloto).</p>
+</section>
+
+<section class="svc" id="servicios">
+  <div class="svc-head">
+    <div class="eyebrow" style="letter-spacing:.12em">Conozca más</div>
+    <h2>Servicios PITAMEX para su proyecto</h2>
+    <p>Si le interesa avanzar, estos son los programas con los que lo acompañamos, desde conocer la huerta hasta vender su fruta con nosotros. Toque cada uno para ver el detalle.</p>
+  </div>
+
+  <div class="svc-list">
+
+    <details class="svc-item">
+      <summary><span class="svc-n">1</span><span class="svc-t"><b>Visita a huertos PITAMEX</b><small>Recorrido de 1 hora por nuestra huerta</small></span><span class="svc-p">$2,000<small>2 personas</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Un recorrido por nuestra huerta para conocer de cerca la planta de pitahaya y su proceso de desarrollo: desde el cultivo hasta el empaque.</p>
+        <ul>
+          <li><b>Duración:</b> 1 hora.</li>
+          <li><b>Inversión:</b> $2,000 por 2 personas, con previa reservación y sujeto a disponibilidad.</li>
+          <li><b>Requisitos por persona:</b> INE, constancia de situación fiscal, comprobante de domicilio y comprobante de pago de la visita.</li>
+          <li>Se brinda información básica sobre la huerta y su proceso.</li>
+        </ul>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20agendar%20una%20visita%20a%20la%20huerta." target="_blank" rel="noopener">Agendar visita por WhatsApp</a>
+      </div>
+    </details>
+
+    <details class="svc-item">
+      <summary><span class="svc-n">2</span><span class="svc-t"><b>Asistencia técnica para su cultivo</b><small>Asesoría de 0 a 10 años de edad de la planta</small></span><span class="svc-p">$3,000<small>mensual</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Un paquete personalizado según la etapa fenológica, las necesidades y las condiciones de cada predio, para que tenga un cultivo de calidad.</p>
+        <ul>
+          <li><b>Incluye:</b> plan de manejo, control de plagas y enfermedades, nutrición, polinización y cosecha.</li>
+          <li>Análisis de savia bimestral para revisar la nutrición de la planta.</li>
+          <li>Valoración de dos técnicos especializados cada 15 días vía remota y atención de dudas por WhatsApp.</li>
+          <li><b>Asesoría mensual vía remota:</b> $3,000.</li>
+          <li><b>Asesoría presencial:</b> $3,000 por visita, sin viáticos. Aplica hasta 3 horas de Moroleón (350 km a la redonda); más lejos, sujeto a revisión.</li>
+        </ul>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20la%20asistencia%20t%C3%A9cnica%20para%20mi%20cultivo." target="_blank" rel="noopener">Pedir información por WhatsApp</a>
+      </div>
+    </details>
+
+    <details class="svc-item">
+      <summary><span class="svc-n">3</span><span class="svc-t"><b>Programa de valoración de huertos nuevos</b><small>Certificación del proyecto · ¿es apto su predio?</small></span><span class="svc-p">desde $1,500<small>remota</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Un técnico especializado valora su predio y emite un dictamen <b>positivo o negativo</b> sobre su potencial para el cultivo de pitahaya.</p>
+        <ul>
+          <li><b>Incluye:</b> evaluación de posición geográfica y logística, condiciones climáticas y de suelo, volumen de agua disponible, plagas, patógenos y hospederos de la región, y situación fiscal y legal de la empresa.</li>
+          <li><b>Valoración de predio vía remota:</b> $1,500.</li>
+          <li><b>Certificación en sitio:</b> $3,000.</li>
+        </ul>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20quiero%20valorar%20mi%20predio%20para%20pitahaya." target="_blank" rel="noopener">Valorar mi predio</a>
+      </div>
+    </details>
+
+    <details class="svc-item">
+      <summary><span class="svc-n">4</span><span class="svc-t"><b>Proyección para el establecimiento de huerto nuevo</b><small>PROPEP · más de 10 años de experiencia</small></span><span class="svc-p">$15,000<small>por predio</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Una propuesta para que invierta con un plan de acción claro:</p>
+        <ul>
+          <li>Prevención de riesgos del proyecto.</li>
+          <li>Posición geográfica y logística, clima y suelo, agua disponible, plagas y patógenos de la región.</li>
+          <li>Mercado al que podrá aspirar.</li>
+          <li>Recomendación de tutor, marco y densidad de plantación, y de las variedades a implementar.</li>
+        </ul>
+        <div class="svc-note"><b>Beneficio:</b> se le bonifica el 50&nbsp;% de esta inversión en productos PITAMEX al comprar las plantas de su primera hectárea (5,700 plantas).</div>
+        <ul class="svc-small">
+          <li>No incluye gastos de viaje. Aplica hasta 3 horas de Moroleón (350 km a la redonda); más lejos, sujeto a revisión.</li>
+          <li>El costo es por predio. Predios de más de 50 hectáreas se cotizan aparte.</li>
+        </ul>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20la%20proyecci%C3%B3n%20para%20establecer%20un%20huerto%20nuevo." target="_blank" rel="noopener">Pedir mi proyección</a>
+      </div>
+    </details>
+
+    <details class="svc-item">
+      <summary><span class="svc-n">5</span><span class="svc-t"><b>Corrida financiera personalizada</b><small>Proyección financiera de su huerto nuevo</small></span><span class="svc-p">Cotizar<small>&nbsp;</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Un análisis financiero con la proyección de inversión, costos e ingresos de su huerto, hecho con los datos de su predio, para que decida con números claros.</p>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20una%20corrida%20financiera%20para%20mi%20huerto." target="_blank" rel="noopener">Solicitar corrida financiera</a>
+      </div>
+    </details>
+
+    <details class="svc-item">
+      <summary><span class="svc-n">6</span><span class="svc-t"><b>Integración para proyectos externos</b><small>¿Ya produce pitahaya? Venda su fruta con PITAMEX</small></span><span class="svc-p">Reglas de<small>recepción</small></span><span class="svc-chev" aria-hidden="true"></span></summary>
+      <div class="svc-body">
+        <p>Si ya tiene huerta, puede entregar su fruta a PITAMEX en consignación. Estas son las reglas principales de recepción:</p>
+        <div class="svc-grid">
+          <div><h4>Antes de entregar</h4><ul><li>Agende cita: no se recibe fruta sin cita.</li><li>Lunes, miércoles y viernes, 7:30 a.m. a 12:30 p.m.</li><li>Envíe peso aproximado y fotos de las cajas listas.</li><li>Identificación, mapa de carga, análisis de agua y bitácora de plaguicidas.</li></ul></div>
+          <div><h4>Empaque y transporte</h4><ul><li>Caja rígida, máximo 15 kg.</li><li>Cada caja con lote, fecha de cosecha, talla y productor.</li><li>Transporte limpio y protegido. Nunca a granel.</li><li>Fruta que cae al suelo se desecha.</li></ul></div>
+          <div><h4>La fruta debe cumplir</h4><ul><li>Sana, limpia y firme; color al 3/4.</li><li>Grados Brix entre 14° y 22°.</li><li>Cierre polínico cerrado; pedúnculo cortado con tijera (10 mm a 1 cm).</li><li>Peso desde 320 g nacional y 500 g exportación.</li><li>Vida de anaquel mínima de 3 semanas.</li></ul></div>
+          <div><h4>Inspección y pago</h4><ul><li>Muestreo del 7&nbsp;% de la carga; prueba destructiva hasta del 2&nbsp;%.</li><li>Dictamen: aceptada, parcial o rechazada.</li><li>Precio spot de mercado (SNIIM y USDA); comisión PITAMEX del 20&nbsp;%.</li><li>Pago de 2 a 8 semanas, una vez cobrado al cliente.</li></ul></div>
+        </div>
+        <figure class="svc-fig">
+          <a href="{{ asset('images/raffles/mini-manual-recepcion.jpg') }}" target="_blank" rel="noopener"><img src="{{ asset('images/raffles/mini-manual-recepcion.jpg') }}" onerror="this.closest('figure').remove()" alt="Mini manual de recepción de fruta PITAMEX" loading="lazy"></a>
+          <figcaption>Mini manual de recepción de fruta · toque la imagen para verla en grande</figcaption>
+        </figure>
+        <a class="svc-wa" href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20ya%20produzco%20pitahaya%20y%20me%20interesa%20entregar%20mi%20fruta." target="_blank" rel="noopener">Quiero vender mi fruta con PITAMEX</a>
+      </div>
+    </details>
+
+  </div>
 </section>
 
 <footer><div class="wrap">

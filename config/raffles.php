@@ -10,7 +10,7 @@ return [
     'logo_url' => env('RAFFLE_LOGO_URL', env('APP_URL').'/images/raffles/logo-pitamex.png'),
 
     // PDF del temario (botón "Descargar temario" del correo)
-    'temario_url' => env('RAFFLE_TEMARIO_URL', 'https://pitamex.org'),
+    'temario_url' => env('RAFFLE_TEMARIO_URL', 'https://admin-pitahaya.brounieapps.com/temario'),
 
     // Aviso de privacidad (pie del correo y casilla del registro)
     'privacy_url' => env('RAFFLE_PRIVACY_URL', 'https://pitamex.org'),

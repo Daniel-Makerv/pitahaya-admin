@@ -119,19 +119,92 @@
 </td></tr>
 
 <tr><td class="px" style="padding:30px 36px 4px;">
-  <p style="margin:0 0 10px;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#C8195F;">4. Más información para su proyecto</p>
-  <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4F5D55;">Descargue el temario con lo que PITAMEX le puede ofrecer:</p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14.5px;line-height:1.5;">
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;background:#F5F7F3;font-weight:bold;color:#C8195F;">1.</td><td style="padding:10px 12px;background:#F5F7F3;color:#34463C;">Visita a huertos PITAMEX</td></tr>
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;font-weight:bold;color:#C8195F;">2.</td><td style="padding:10px 12px;color:#34463C;">Asesoría de 0 a 10 años de edad de la planta</td></tr>
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;background:#F5F7F3;font-weight:bold;color:#C8195F;">3.</td><td style="padding:10px 12px;background:#F5F7F3;color:#34463C;">Programa básico de valoración de huertos nuevos</td></tr>
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;font-weight:bold;color:#C8195F;">4.</td><td style="padding:10px 12px;color:#34463C;">Proyección para el establecimiento de huerto nuevo de pitahaya</td></tr>
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;background:#F5F7F3;font-weight:bold;color:#C8195F;">5.</td><td style="padding:10px 12px;background:#F5F7F3;color:#34463C;">Corrida financiera más proyección de huerto nuevo personalizado</td></tr>
-    <tr><td width="36" valign="top" style="padding:10px 0 10px 12px;font-weight:bold;color:#C8195F;">6.</td><td style="padding:10px 12px;color:#34463C;">Información de integración para otros proyectos externos a la red de PITAMEX</td></tr>
+  <p style="margin:0 0 10px;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#C8195F;">4. Servicios PITAMEX para su proyecto</p>
+  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#4F5D55;">Si le interesa avanzar, estos son los programas con los que lo acompañamos, desde conocer la huerta hasta vender su fruta con nosotros.</p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F7F3;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">1</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Visita a huertos PITAMEX</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">Recorrido de 1 hora por nuestra huerta</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Conozca de cerca la planta de pitahaya y su proceso, desde el cultivo hasta el empaque.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20agendar%20una%20visita%20a%20la%20huerta." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Agendar visita por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">$2,000<br><span style="font-size:11.5px;font-weight:normal;color:#6A776F;">2 personas</span></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">2</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Asistencia técnica para su cultivo</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">Asesoría de 0 a 10 años de edad de la planta</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Plan de manejo, plagas, nutrición, polinización y cosecha, con análisis de savia bimestral.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20la%20asistencia%20t%C3%A9cnica%20para%20mi%20cultivo." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Pedir información por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">$3,000<br><span style="font-size:11.5px;font-weight:normal;color:#6A776F;">mensual</span></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F7F3;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">3</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Valoración de huertos nuevos</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">¿Es apto su predio para pitahaya?</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Un técnico evalúa clima, suelo, agua y logística, y emite un dictamen positivo o negativo.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20quiero%20valorar%20mi%20predio%20para%20pitahaya." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Valorar mi predio por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">desde $1,500<br><span style="font-size:11.5px;font-weight:normal;color:#6A776F;">remota</span></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">4</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Proyección de huerto nuevo (PROPEP)</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">Más de 10 años de experiencia</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Plan de acción para invertir. Se bonifica el 50&nbsp;% en productos PITAMEX al comprar su primera hectárea.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20la%20proyecci%C3%B3n%20para%20establecer%20un%20huerto%20nuevo." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Pedir mi proyección por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">$15,000<br><span style="font-size:11.5px;font-weight:normal;color:#6A776F;">por predio</span></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F7F3;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">5</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Corrida financiera personalizada</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">Proyección financiera de su huerto</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Inversión, costos e ingresos calculados con los datos de su predio.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20me%20interesa%20una%20corrida%20financiera%20para%20mi%20huerto." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Solicitar corrida por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">Cotizar</td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:0 0 8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E1E5DE;border-radius:12px;"><tr>
+        <td width="44" valign="top" style="padding:16px 0 16px 14px;"><div style="width:32px;height:32px;line-height:32px;border-radius:9px;background:#FBE9F0;color:#C8195F;font-weight:bold;font-size:15px;text-align:center;">6</div></td>
+        <td valign="top" style="padding:14px 12px;">
+          <p style="margin:0;font-size:15px;font-weight:bold;color:#14211B;">Integración para proyectos externos</p>
+          <p style="margin:2px 0 6px;font-size:13px;color:#6A776F;">¿Ya produce pitahaya? Venda su fruta con PITAMEX</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#34463C;">Entregue su fruta con cita; precio spot de mercado y comisión PITAMEX del 20&nbsp;%.</p>
+          <a href="https://wa.me/524451063437?text=Hola%20PITAMEX%2C%20ya%20produzco%20pitahaya%20y%20me%20interesa%20entregar%20mi%20fruta." style="font-size:13.5px;font-weight:bold;color:#C8195F;text-decoration:none;">Vender mi fruta por WhatsApp &rarr;</a>
+        </td>
+        <td width="96" valign="top" align="right" style="padding:14px 14px 14px 0;font-size:14.5px;font-weight:bold;color:#173A2C;text-align:right;">Consignación</td>
+      </tr></table>
+    </td></tr>
   </table>
-  <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px;"><tr><td style="border:2px solid #173A2C;border-radius:10px;">
-    <a href="{{ $temarioUrl }}" style="display:inline-block;padding:13px 22px;font-size:15px;font-weight:bold;color:#173A2C;text-decoration:none;">Descargar temario &darr;</a>
-  </td></tr></table>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;"><tr>
+    <td style="border:2px solid #173A2C;border-radius:10px;">
+      <a href="{{ $registerUrl }}#servicios" style="display:inline-block;padding:12px 20px;font-size:14.5px;font-weight:bold;color:#173A2C;text-decoration:none;">Ver el detalle de cada servicio &rarr;</a>
+    </td>
+    <td width="10"></td>
+    <td>
+      <a href="{{ $temarioUrl }}" style="display:inline-block;padding:12px 4px;font-size:14px;font-weight:bold;color:#56645C;text-decoration:underline;">Descargar temario (PDF)</a>
+    </td>
+  </tr></table>
+</td></tr></table>
 </td></tr>
 
 <tr><td class="px" style="padding:30px 36px 0;">
