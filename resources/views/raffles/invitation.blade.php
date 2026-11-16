@@ -263,7 +263,7 @@ footer .logo-box img{height:64px}
           <li>Mercado al que podrá aspirar.</li>
           <li>Recomendación de tutor, marco y densidad de plantación, y de las variedades a implementar.</li>
         </ul>
-        <div class="svc-note"><b>Beneficio:</b> se le bonifica el 50&nbsp;% de esta inversión en productos PITAMEX al comprar las plantas de su primera hectárea (5,700 plantas).</div>
+        <div class="svc-note"><b>Beneficio:</b> se le bonifica el 50&nbsp;% de esta inversión en productos PITAMEX al comprar las plantas de su primera hectárea (5,600 plantas).</div>
         <ul class="svc-small">
           <li>No incluye gastos de viaje. Aplica hasta 3 horas de Moroleón (350 km a la redonda); más lejos, sujeto a revisión.</li>
           <li>El costo es por predio. Predios de más de 50 hectáreas se cotizan aparte.</li>
@@ -319,11 +319,10 @@ var STEPS = [
 { k: 'municipio', l: 'Municipio', t: 'text', expo: true },
 { k: 'conocio', l: '¿Cómo conoció PITAMEX?', t: 'one', o: ['Expo', 'Facebook', 'Instagram', 'Referido', 'Página web', 'Otro'] }
 ]},
-{ chip: 'Predio', title: 'Su predio', intro: 'Superficie, tenencia y ubicación del terreno.', qs: [
+{ chip: 'Predio', title: 'Su predio', intro: 'Superficie, tenencia y tipo de terreno.', qs: [
 { k: 'superficie', l: 'Superficie disponible', t: 'one', expo: true, o: ['Más de 10 ha', '5 a 10 ha', '3 a 5 ha', '1 a 3 ha', 'Menos de 1 ha'] },
 { k: 'propia', l: '¿La tierra es propia?', t: 'one', o: ['Sí', 'No', 'Parcialmente'] },
 { k: 'propiedad', l: 'Tipo de propiedad', t: 'one', opt: true, o: ['Privada', 'Ejidal', 'Arrendada', 'Comodato', 'Sociedad', 'Familiar'] },
-{ k: 'ubicacion', l: 'Ubicación del predio', t: 'loc', opt: true },
 { k: 'terreno', l: 'Tipo de terreno', t: 'one', opt: true, o: ['Plano', 'Ladera', 'Mixto', 'Lo desconozco'] },
 { k: 'predios', l: 'Si tiene 2 o más predios, describa las características de los adicionales', t: 'area', opt: true, ph: 'Superficie, agua, suelo, ubicación…' }
 ]},
