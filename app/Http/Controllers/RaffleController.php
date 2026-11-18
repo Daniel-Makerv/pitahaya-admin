@@ -9,6 +9,7 @@ use App\Models\RaffleParticipant;
 use App\Models\TypeForm;
 use App\Support\FormContact;
 use App\Support\FormFilters;
+use App\Support\RegistroPitamex;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,12 +32,12 @@ class RaffleController extends Controller
     {
         $raffles = Raffle::withCount([
             'participants',
-            'participants as confirmed_count' => fn ($q) => $q->where('status', 'confirmed'),
+            'participants as confirmed_count' => fn($q) => $q->where('status', 'confirmed'),
         ])
             ->with('winners')
             ->latest()
             ->get()
-            ->map(fn (Raffle $raffle) => [
+            ->map(fn(Raffle $raffle) => [
                 ...$this->rafflePayload($raffle),
                 'invited_count'   => $raffle->participants_count,
                 'confirmed_count' => $raffle->confirmed_count,
@@ -56,13 +57,13 @@ class RaffleController extends Controller
 
     public function show(Raffle $raffle)
     {
-        $raffle->load(['participants' => fn ($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
+        $raffle->load(['participants' => fn($q) => $q->orderByRaw('place IS NULL')->orderBy('place')->orderByRaw('number IS NULL')->orderBy('number')->orderBy('name'), 'winners']);
 
         return Inertia::render('Raffles/Show', [
             'raffle'       => $this->rafflePayload($raffle),
             // Áreas de interés para el filtro del modal "Agregar a la rifa"
             'typeForms'    => TypeForm::orderBy('name')->get(['id', 'name']),
-            'participants' => $raffle->participants->map(fn (RaffleParticipant $p) => [
+            'participants' => $raffle->participants->map(fn(RaffleParticipant $p) => [
                 'id'           => $p->id,
                 'name'         => $p->name,
                 'email'        => $p->email,
@@ -74,6 +75,7 @@ class RaffleController extends Controller
                 'score'        => $p->score,
                 'priority'     => $p->priority,
                 'data'         => $p->data ?? [],
+                'answers'      => RegistroPitamex::answers($p->data ?? []),
                 'invited_at'   => $p->invited_at?->format('d/m/Y H:i'),
                 'confirmed_at' => $p->confirmed_at?->format('d/m/Y H:i'),
             ])->values(),
@@ -119,7 +121,7 @@ class RaffleController extends Controller
         $limit = 200; // igual al máximo de invitaciones por envío
         $hideInvited = $request->boolean('hide_invited');
 
-        $invitedEmails = array_flip($raffle->participants()->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all());
+        $invitedEmails = array_flip($raffle->participants()->whereNotNull('email')->pluck('email')->map(fn($e) => strtolower($e))->all());
         $invitedFormIds = array_flip($raffle->participants()->whereNotNull('form_id')->pluck('form_id')->all());
 
         $query = Form::leftJoin('type_forms', 'forms.type_form_id', '=', 'type_forms.id')
@@ -238,13 +240,13 @@ class RaffleController extends Controller
 
         $message = $sent === 1 ? 'Se programó 1 invitación.' : "Se programaron {$sent} invitaciones.";
         if ($skipped) {
-            $message .= ' Omitidos: '.implode(', ', $skipped).'.';
+            $message .= ' Omitidos: ' . implode(', ', $skipped) . '.';
         }
 
         $redirect = back()->with('success', $message);
 
         return $failed
-            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: '.implode(', ', $failed).'. Usa «Reenviar» en la rifa.'])
+            ? $redirect->withErrors(['form_ids' => 'No se pudo enviar a: ' . implode(', ', $failed) . '. Usa «Reenviar» en la rifa.'])
             : $redirect;
     }
 
@@ -391,7 +393,7 @@ class RaffleController extends Controller
             'lottery_number' => $raffle->lottery_number,
             'target_number'  => $raffle->formatNumber($raffle->target_number),
             'drawn_at'       => $raffle->drawn_at?->format('d/m/Y H:i'),
-            'winners'        => $raffle->winners->map(fn (RaffleParticipant $w) => [
+            'winners'        => $raffle->winners->map(fn(RaffleParticipant $w) => [
                 'id'       => $w->id,
                 'place'    => $w->place,
                 'prize'    => $raffle->prizeList()[$w->place - 1] ?? null,

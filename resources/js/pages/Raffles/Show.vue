@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RaffleAnswersModal, {
+    type AnswerSection,
+} from '@/components/RaffleAnswersModal.vue';
 import RaffleDrawModal from '@/components/RaffleDrawModal.vue';
 import RaffleFormModal from '@/components/RaffleFormModal.vue';
 import RaffleInvitePicker from '@/components/RaffleInvitePicker.vue';
@@ -48,6 +51,7 @@ interface Participant {
     score: number | null;
     priority: 'A' | 'B' | 'C' | null;
     data: Record<string, unknown>;
+    answers: AnswerSection[];
     invited_at: string | null;
     confirmed_at: string | null;
 }
@@ -143,6 +147,11 @@ const showEdit = ref(false);
 const showInvite = ref(false);
 const showManualInvite = ref(false);
 const showDraw = ref(false);
+
+// ---------- Ver respuestas ----------
+const viewing = ref<Participant | null>(null);
+const hasAnswers = (p: Participant) =>
+    p.answers?.some((s) => s.answers.length > 0);
 
 // ---------- Acciones por participante ----------
 const busyId = ref<number | null>(null);
@@ -637,9 +646,7 @@ const placeLabel = (place: number) =>
                                 <th class="px-6 py-3">Prioridad</th>
                                 <th class="px-6 py-3">Estado</th>
                                 <th class="px-6 py-3">Fecha</th>
-                                <th v-if="isOpen" class="px-6 py-3 text-end">
-                                    Acciones
-                                </th>
+                                <th class="px-6 py-3 text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 text-sm">
@@ -727,11 +734,27 @@ const placeLabel = (place: number) =>
                                     }}
                                 </td>
                                 <td
-                                    v-if="isOpen"
                                     class="px-6 py-3.5 text-end whitespace-nowrap"
                                 >
                                     <button
-                                        v-if="p.status === 'invited' && p.email"
+                                        type="button"
+                                        @click="viewing = p"
+                                        :disabled="!hasAnswers(p)"
+                                        :title="
+                                            hasAnswers(p)
+                                                ? 'Ver sus respuestas del registro'
+                                                : 'Todavía no contesta el registro'
+                                        "
+                                        class="mr-3 inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        Ver respuestas
+                                    </button>
+                                    <button
+                                        v-if="
+                                            isOpen &&
+                                            p.status === 'invited' &&
+                                            p.email
+                                        "
                                         type="button"
                                         @click="resend(p)"
                                         :disabled="busyId === p.id"
@@ -740,6 +763,7 @@ const placeLabel = (place: number) =>
                                         Reenviar
                                     </button>
                                     <button
+                                        v-if="isOpen"
                                         type="button"
                                         @click="remove(p)"
                                         :disabled="busyId === p.id"
@@ -752,7 +776,7 @@ const placeLabel = (place: number) =>
 
                             <tr v-if="!visible.length">
                                 <td
-                                    :colspan="isOpen ? 6 : 5"
+                                    colspan="6"
                                     class="px-6 py-12 text-center text-sm text-slate-500"
                                 >
                                     <template v-if="search"
@@ -792,6 +816,7 @@ const placeLabel = (place: number) =>
             :type-forms="typeForms"
             @close="showInvite = false"
         />
+        <RaffleAnswersModal :participant="viewing" @close="viewing = null" />
         <RaffleManualInviteModal
             :show="showManualInvite"
             :raffle-id="raffle.id"
