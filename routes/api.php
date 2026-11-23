@@ -20,7 +20,7 @@ Route::get(
 Route::post(
     '/webhook/whatsapp',
     [Whatsapp\WhatsAppWebhookController::class, 'handle']
-);
+)->middleware(\App\Http\Middleware\VerifyWhatsAppSignature::class);
 
 
 

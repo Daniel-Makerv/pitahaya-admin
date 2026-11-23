@@ -2,277 +2,50 @@
 
 namespace App\Http\Controllers\Whatsapp;
 
+use App\Http\Controllers\Controller;
+use App\Jobs\ProcessWhatsAppWebhook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use App\Models\WhatsAppContact;
-use App\Models\WhatsAppConversation;
-use App\Models\WhatsAppMessage;
-use App\Services\WhatsAppService;
-use App\Services\WhatsAppFormService;
-use App\Models\WhatsAppFormSession;
-use App\Models\WhatsAppAnswer;
-use App\Models\WhatsAppQuestion;
-use App\Services\WhatsAppAiService;
 
+/**
+ * Webhook de WhatsApp Cloud API.
+ *
+ * GET  /api/webhook/whatsapp  -> verificación de Meta
+ * POST /api/webhook/whatsapp  -> eventos (mensajes, ecos de la app, estados...)
+ *
+ * El POST solo encola y responde 200 de inmediato. Todo el trabajo (formulario, IA, guardar)
+ * lo hace App\Jobs\ProcessWhatsAppWebhook, así Meta no reintenta si OpenAI tarda.
+ */
 class WhatsAppWebhookController extends Controller
-
 {
-
-
-
     public function verify(Request $request)
     {
-        $mode = $request->query('hub_mode');
-        $token = $request->query('hub_verify_token');
-        $challenge = $request->query('hub_challenge');
-
         if (
-            $mode === 'subscribe' &&
-            $token === config('services.whatsapp.verify_token')
+            $request->query('hub_mode') === 'subscribe' &&
+            $request->query('hub_verify_token') === config('services.whatsapp.verify_token')
         ) {
             Log::info('WhatsApp webhook verificado');
 
-            return response($challenge, 200)
+            return response($request->query('hub_challenge'), 200)
                 ->header('Content-Type', 'text/plain');
         }
 
-        Log::warning('Falló verificación WhatsApp', [
-            'mode' => $mode,
-        ]);
+        Log::warning('Falló verificación WhatsApp', ['mode' => $request->query('hub_mode')]);
 
         return response('Forbidden', 403);
     }
 
-    public function handle(
-        Request $request,
-        WhatsAppService $whatsAppService,
-        WhatsAppFormService $formService,
-        WhatsAppAiService $aiService
-    ) {
-        try {
+    public function handle(Request $request)
+    {
+        $payload = $request->all();
 
-            $payload = $request->all();
+        Log::info('WhatsApp webhook recibido', [
+            'fields' => collect(data_get($payload, 'entry', []))
+                ->flatMap(fn ($entry) => collect(data_get($entry, 'changes', []))->pluck('field'))
+                ->all(),
+        ]);
 
-            Log::info('WhatsApp webhook recibido', [
-                'payload' => $payload,
-            ]);
-
-            $value = data_get(
-                $payload,
-                'entry.0.changes.0.value'
-            );
-
-            /*
-         * No todos los webhooks contienen mensajes.
-         * También recibiremos sent, delivered, read, etc.
-         */
-            $message = data_get($value, 'messages.0');
-
-            if (!$message) {
-                return response('EVENT_RECEIVED', 200);
-            }
-
-            $waId = data_get(
-                $value,
-                'contacts.0.wa_id'
-            );
-
-            $name = data_get(
-                $value,
-                'contacts.0.profile.name'
-            );
-
-            $phone = data_get(
-                $message,
-                'from'
-            );
-
-            $messageId = data_get(
-                $message,
-                'id'
-            );
-
-            $type = data_get(
-                $message,
-                'type'
-            );
-
-            /*
-         * Por ahora solamente procesamos texto.
-         */
-            $body = match ($type) {
-
-                'text' => data_get(
-                    $message,
-                    'text.body'
-                ),
-
-                'interactive' => match (data_get($message, 'interactive.type')) {
-
-                    'button_reply' => data_get(
-                        $message,
-                        'interactive.button_reply.title'
-                    ),
-
-                    'list_reply' => data_get(
-                        $message,
-                        'interactive.list_reply.title'
-                    ),
-
-                    default => null,
-                },
-
-                default => null,
-            };
-
-            /*
-         * Evitar procesar dos veces el mismo
-         * mensaje si Meta reintenta el webhook.
-         */
-            if (
-                $messageId &&
-                WhatsAppMessage::where(
-                    'meta_message_id',
-                    $messageId
-                )->exists()
-            ) {
-                return response('EVENT_RECEIVED', 200);
-            }
-
-            /*
-         * Crear o actualizar contacto.
-         */
-            $contact = WhatsAppContact::updateOrCreate(
-                [
-                    'wa_id' => $waId ?? $phone,
-                ],
-                [
-                    'phone' => $phone,
-                    'name' => $name,
-                ]
-            );
-
-            /*
-         * Buscar conversación abierta.
-         */
-            $conversation = WhatsAppConversation::firstOrCreate(
-                [
-                    'whatsapp_contact_id' => $contact->id,
-                    'status' => 'open',
-                ],
-                [
-                    'mode' => 'ai',
-                    'last_message_at' => now(),
-                ]
-            );
-
-            /*
-         * Guardar mensaje.
-         */
-            WhatsAppMessage::create([
-                'whatsapp_conversation_id' => $conversation->id,
-                'meta_message_id' => $messageId,
-                'direction' => 'inbound',
-                'sender_type' => 'customer',
-                'type' => $type,
-                'body' => $body,
-                'payload' => $message,
-                'sent_at' => isset($message['timestamp'])
-                    ? now()->setTimestamp((int) $message['timestamp'])
-                    : now(),
-            ]);
-
-
-            if (
-                $conversation->mode === 'ai' &&
-                in_array($type, ['text', 'interactive']) &&
-                $body !== null
-            ) {
-
-                /*
-     * 1. Revisar si actualmente está
-     * contestando un formulario.
-     */
-                $activeSession = WhatsAppFormSession::query()
-                    ->where(
-                        'whatsapp_conversation_id',
-                        $conversation->id
-                    )
-                    ->where('status', 'in_progress')
-                    ->latest()
-                    ->first();
-
-                if ($activeSession) {
-
-                    // Continúa contestando el formulario
-                    $formService->answer(
-                        $activeSession,
-                        $body
-                    );
-                } else {
-
-                    /*
-         * 2. Revisar si ya terminó
-         * anteriormente el formulario.
-         */
-                    $completedSession = WhatsAppFormSession::query()
-                        ->where(
-                            'whatsapp_conversation_id',
-                            $conversation->id
-                        )
-                        ->where('status', 'completed')
-                        ->latest()
-                        ->first();
-
-                    if ($completedSession) {
-
-                        /*
-             * Ya terminó el formulario.
-             *
-             * Más adelante aquí mandaremos
-             * el mensaje a la IA.
-             */
-                        $response = $aiService->reply(
-                            $conversation,
-                            $body
-                        );
-
-                        $whatsAppService->sendText(
-                            $contact->phone,
-                            $response
-                        );
-                    } else {
-
-                        /*
-             * Nunca ha contestado el formulario.
-             */
-                        $formService->start($conversation);
-                    }
-                }
-            }
-
-            $conversation->update([
-                'last_message_at' => now(),
-            ]);
-
-            Log::info('Mensaje WhatsApp guardado', [
-                'contact_id' => $contact->id,
-                'conversation_id' => $conversation->id,
-                'message_id' => $messageId,
-                'body' => $body,
-            ]);
-        } catch (\Throwable $e) {
-
-            Log::error('Error procesando WhatsApp webhook', [
-                'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-            ]);
-
-            // Por ahora lo dejamos en 200 para evitar
-            // reintentos constantes de Meta durante desarrollo.
-        }
+        ProcessWhatsAppWebhook::dispatch($payload);
 
         return response('EVENT_RECEIVED', 200);
     }

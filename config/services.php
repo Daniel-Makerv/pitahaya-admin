@@ -40,6 +40,10 @@ return [
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
+
+        // Horas que el agente se queda callado después de que alguien contesta desde la app del celular
+        'human_pause_hours' => (int) env('WHATSAPP_HUMAN_PAUSE_HOURS', 12),
 
         'app_id' => env('META_APP_ID'),
         'embedded_signup_config_id' => env(

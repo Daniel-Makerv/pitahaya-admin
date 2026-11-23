@@ -48,6 +48,12 @@ class WhatsAppFormSession extends Model
         );
     }
 
+    /** Registro de forms que se creó al terminar el cuestionario */
+    public function exportedForm()
+    {
+        return $this->belongsTo(Form::class, 'exported_form_id');
+    }
+
     public function answers()
     {
         return $this->hasMany(

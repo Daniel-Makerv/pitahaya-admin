@@ -12,6 +12,7 @@ class WhatsAppConversation extends Model
 
     protected $casts = [
         'last_message_at' => 'datetime',
+        'ai_paused_until' => 'datetime',
     ];
 
     public function contact()

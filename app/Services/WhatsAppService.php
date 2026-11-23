@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\WhatsAppConversation;
+use App\Models\WhatsAppMessage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class WhatsAppService
@@ -37,6 +40,32 @@ class WhatsAppService
         }
 
         return $response->json();
+    }
+
+    /**
+     * Guarda en whats_app_messages un mensaje que mandó el bot, para que la conversación quede completa.
+     * $result es lo que regresa Meta al enviar (trae el id del mensaje).
+     */
+    public function record(
+        WhatsAppConversation $conversation,
+        array $result,
+        string $type,
+        ?string $body,
+        array $payload = []
+    ): WhatsAppMessage {
+        $conversation->update(['last_message_at' => now()]);
+
+        return WhatsAppMessage::create([
+            'whatsapp_conversation_id' => $conversation->id,
+            // meta_message_id es obligatorio y único; si Meta no regresó id se genera uno local
+            'meta_message_id' => data_get($result, 'messages.0.id') ?? ('local-' . Str::uuid()),
+            'direction'   => 'outbound',
+            'sender_type' => 'ai',
+            'type'        => $type,
+            'body'        => $body,
+            'payload'     => $payload ?: null,
+            'sent_at'     => now(),
+        ]);
     }
 
     private function normalizePhone(string $phone): string
